@@ -15,5 +15,15 @@ to start listening for UDP packets on port 8.
 
 Alternatively, you can use [NICEcontrol](https://github.com/thomabir/NICEcontrol), which is a GUI for monitoring and controlling the NICE experiment.
 
+## Debugging
+All print statements from the Zynq are sent to the UART, which is transmitted over the USB connection between the Zynq and the computer.
+To listen to the UART output of the Zynq, use
+```bash
+screen /dev/ttyUSB1 115200
+```
+where `/dev/ttyUSB1` is the UART device, and `115200` is the baud rate. Sometimes, I have to switch the USB port to which the UART is connected to get this to work.
+
+
+
 ## Acknowledgements
 The UDP code that sends data from the FPGA is based on the [Zynq_UDP](https://github.com/delhatch/Zynq_UDP) project by [delhatch](https://github.com/delhatch), which is in turn based on [A MicroZed UDP Server for Waveform Centroiding](https://lancesimms.com/Xilinx/MicroZed_UDP_Server_for_Waveform_Centroiding_Table_Of_Contents.html) by [Lance Simms](https://lancesimms.com/).
