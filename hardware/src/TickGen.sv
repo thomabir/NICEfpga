@@ -1,10 +1,22 @@
+//
+// TickGen generates a tick signal that is high for one clock cycle every DIVIDER clock cycles.
+//
+// Parameters:
+//   - DIVIDER: the number of clock cycles between each tick
+//
+// Inputs:
+//   - clk_i: the clock signal
+//   - reset_i: the reset signal
+//
+// Outputs:
+//   - tick_o: the tick signal
+//
 module TickGen #(
-    parameter DIVIDER = 100
+    parameter logic [23:0] DIVIDER = 100
 ) (
     input clk_i,
     input reset_i,
-
-    output tick_o  // 1 for one clock cycle every DIVIDER cycles
+    output tick_o
 );
 
   logic unsigned [23:0] counter;
