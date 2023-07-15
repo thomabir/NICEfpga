@@ -22,7 +22,7 @@ module main_sv (
 
   // ADC reader
   logic signed [23:0] adc1_o;
-//   logic signed [23:0] adc2_o;
+  //   logic signed [23:0] adc2_o;
 
   DoutReader reader1 (
       .clk_i(clk),
@@ -48,7 +48,7 @@ module main_sv (
 
   // input filters
   // logic signed [23:0] ifilt1_o;
-//   logic signed [15:0] ifilt2_o;
+  //   logic signed [15:0] ifilt2_o;
   // logic tick1_o;
 
   // InputFilter ifilt1 (
@@ -59,25 +59,25 @@ module main_sv (
   //     .tick_o(tick1_o)
   // );
 
-    //  InputFilter ifilt2 (
-    //      .clk_i(clk),
-    //      .reset_i(reset),
-    //      .adc_i(adc2_o),
-    //      .filtered_o(ifilt2_o)
-    //  );
+  //  InputFilter ifilt2 (
+  //      .clk_i(clk),
+  //      .reset_i(reset),
+  //      .adc_i(adc2_o),
+  //      .filtered_o(ifilt2_o)
+  //  );
 
 
 
 
-//   DacWriter dac1 (
-//       .clk_i(clk),
-//       .reset_i(reset),
-//       .start_i(tick1_o),
-//       .spi_sclk_o(pmoda_o[6]),
-//       .spi_mosi_o(pmoda_o[4]),
-//       .spi_cs_o(pmoda_o[5]),
-//       .data_i(ifilt1_o[23:8])
-//   );
+  //   DacWriter dac1 (
+  //       .clk_i(clk),
+  //       .reset_i(reset),
+  //       .start_i(tick1_o),
+  //       .spi_sclk_o(pmoda_o[6]),
+  //       .spi_mosi_o(pmoda_o[4]),
+  //       .spi_cs_o(pmoda_o[5]),
+  //       .data_i(ifilt1_o[23:8])
+  //   );
 
 
   //    DacWriter2 dac12(
@@ -87,7 +87,7 @@ module main_sv (
   //        .spi_clk_o(pmoda_o[6]),
   //        .spi_mosi_o(pmoda_o[4]),
   //        .spi_cs_o(pmoda_o[5]),
-  //        .data_i(adc1_o[23:8]) 
+  //        .data_i(adc1_o[23:8])
   //    );
 
 
@@ -96,7 +96,7 @@ module main_sv (
   // depending on sw0, return either the counter or the ADC value
   assign oreg1 = {counter1, adc1_o};
 
-  
+
 
 
 endmodule

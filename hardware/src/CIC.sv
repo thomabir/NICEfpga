@@ -46,7 +46,8 @@ module CicDecimator #(
   end  // always_ff
   // the decimated tick_i output assignment: Careful: The decimated tick_i must only be one clock cycle long!
   // For this reason we use an and with the tick_i.
-  assign decimated_tick = (decimator_counter == size_decimator_counter'(decimation_factor-1)) & tick_i;
+  assign decimated_tick = (decimator_counter == size_decimator_counter'(decimation_factor-1))
+                           & tick_i;
 
   // combinational part (just using a conditional assignment):
   assign next_decimator_counter = decimated_tick ? 0 : (decimator_counter + 1);
@@ -87,7 +88,8 @@ module CicInterpolator #(
     parameter num_of_stages = 4,  // the number of stages
     parameter num_bits_input = 16,
     parameter num_bits_output = 16,
-    parameter interpolation_factor =  8 // (only used to calculate the number of bits needed internally)
+    parameter int interpolation_factor = 8
+    // (only used to calculate the number of bits needed internally)
 ) (
     input logic clk_i,
     input logic reset_i,

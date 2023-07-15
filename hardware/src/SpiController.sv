@@ -127,11 +127,13 @@ module SpiController #(
 
 
   // output signals
-  assign spi_mosi_o = state_q.data_tx[state_q.bit_counter - 1] & (!spi_cs_o) & (state_q.bit_counter > 0);
+  assign spi_mosi_o = state_q.data_tx[state_q.bit_counter - 1]
+             & (!spi_cs_o) & (state_q.bit_counter > 0);
   assign spi_sclk_o = (state_q.state == CLK_LEAD);
   assign spi_cs_o = ((state_q.state == IDLE) | (state_q.state == DONE));
 
   assign is_idle_o = (state_q.state == IDLE);
   assign data_o = state_q.data_rx_final;
+
 
 endmodule
