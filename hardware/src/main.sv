@@ -48,24 +48,27 @@ module main_sv (
 
 
     // input filters
-    // logic signed [23:0] ifilt1_o;
-    //   logic signed [15:0] ifilt2_o;
-    // logic tick1_o;
+    logic signed [23:0] ifilt1_o;
+    logic signed [23:0] ifilt2_o;
+    logic tick_ifilt_o;
 
-    // InputFilter ifilt1 (
-    //     .clk_i(clk),
-    //     .reset_i(reset),
-    //     .data_i(adc1_o),
-    //     .data_o(ifilt1_o),
-    //     .tick_o(tick1_o)
-    // );
+    InputFilter ifilt1 (
+        .clk_i  (clk),
+        .reset_i(reset),
+        .tick_i (reader1_tick_o),
+        .data_i (adc1_o),
+        .data_o (ifilt1_o),
+        .tick_o (tick1_o)
+    );
 
-    //  InputFilter ifilt2 (
-    //      .clk_i(clk),
-    //      .reset_i(reset),
-    //      .adc_i(adc2_o),
-    //      .filtered_o(ifilt2_o)
-    //  );
+    InputFilter ifilt2 (
+        .clk_i  (clk),
+        .reset_i(reset),
+        .tick_i (reader1_tick_o),
+        .data_i (adc2_o),
+        .data_o (ifilt2_o),
+        .tick_o ()
+    );
 
 
 
@@ -95,7 +98,7 @@ module main_sv (
     // the 8 MSBs of oreg are the counter, the 24 LSBs are the ADC value
 
     // depending on sw0, return either the counter or the ADC value
-    assign oreg1 = {counter1, adc1_o};
+    assign oreg1 = {counter1, ifilt1_o};
 
 
 

@@ -5,6 +5,7 @@ __pycache__/
 sim_build/
 *.vcd
 results.xml
+*.pdf
 
 # -----------------
 # macOS
