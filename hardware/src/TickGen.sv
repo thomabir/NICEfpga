@@ -19,14 +19,13 @@ module TickGen #(
     output tick_o
 );
 
-  logic unsigned [23:0] counter;
+    logic unsigned [23:0] counter;
 
-  always_ff @(posedge clk_i) begin
-    if (reset_i) counter <= 0;
-    else if (counter < DIVIDER) counter <= counter + 24'd1;
-    else counter <= 0;
-  end  // ff
+    always_ff @(posedge clk_i) begin
+        if (reset_i) counter <= 0;
+        else if (counter < DIVIDER) counter <= counter + 24'd1;
+        else counter <= 0;
+    end  // ff
 
-  assign tick_o = (counter == 0);
-
+    assign tick_o = (counter == 0);
 endmodule
