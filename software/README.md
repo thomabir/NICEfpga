@@ -6,7 +6,8 @@
    1. Select `Create a new plaform from hardware (XSA)`, and select the `.xsa` file you created previously in the `../hardware` directory.
    2. Use the `lwIP Echo Server` template.
 2. In the created project, replace `echo.c` and `main.c` with the files in this repository.
-3. Build and run the project.
+3. Add `includes.h` from this repository to the `src` folder of the project.
+4. Build and run the project.
 
 The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.254`), and to port `RemotePort` (default: `8`). To receive the data on the remote computer, use
 
