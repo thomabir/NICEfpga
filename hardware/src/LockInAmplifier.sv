@@ -90,184 +90,183 @@ module LockInAmplifier #(
 endmodule
 
 module HilbertTransformer (
-    // Interface signals
     input clk_i,
     input tick_i,
-    output reg done_o,
-    // Data Signals
-    input [23:0] signal_i,
-    output reg [23:0] signal_o
+    input logic signed [23:0] signal_i,
+    output logic signed [23:0] signal_o,
+    output logic done_o
 );
-    // Coefficient Storage
-    reg signed [23:0] coeff[22:0];
-    reg signed [23:0] data[22:0];
-    // Counter for iterating through coefficients.
-    reg [4:0] count;
-    // Accumulator
-    reg signed [47:0] acc;
+    parameter int NumOfStages = 23;
+    logic signed [23:0] coeffs[NumOfStages] = '{
+        0,
+        0,
+        -19348,
+        0,
+        -121992,
+        0,
+        -442606,
+        0,
+        -1310247,
+        0,
+        -5164372,
+        0,
+        5164372,
+        0,
+        1310247,
+        0,
+        442606,
+        0,
+        121992,
+        0,
+        19348,
+        0,
+        0
+    };
 
-    // State machine signals
-    localparam IDLE = 0;
-    localparam RUN = 1;
-
-    reg state;
-
-    initial begin
-        coeff[0] = 0;
-        coeff[1] = 0;
-        coeff[2] = -19348;
-        coeff[3] = 0;
-        coeff[4] = -121992;
-        coeff[5] = 0;
-        coeff[6] = -442606;
-        coeff[7] = 0;
-        coeff[8] = -1310247;
-        coeff[9] = 0;
-        coeff[10] = -5164372;
-        coeff[11] = 0;
-        coeff[12] = 5164372;
-        coeff[13] = 0;
-        coeff[14] = 1310247;
-        coeff[15] = 0;
-        coeff[16] = 442606;
-        coeff[17] = 0;
-        coeff[18] = 121992;
-        coeff[19] = 0;
-        coeff[20] = 19348;
-        coeff[21] = 0;
-        coeff[22] = 0;
-    end
-    always @(posedge clk_i) begin : capture
-        integer i;
-        if (tick_i) begin
-            for (i = 0; i < 22; i = i + 1) begin
-                data[i+1] <= data[i];
-            end
-            data[0] <= signal_i;
-        end
-    end
-    always @(posedge clk_i) begin
-        case (state)
-            IDLE: begin
-                done_o <= 1'b0;
-                if (tick_i) begin
-                    count <= 22;
-                    acc <= 0;
-                    state <= RUN;
-                end
-            end
-
-            RUN: begin
-                count <= count - 1'b1;
-                acc <= acc + data[count] * coeff[count];
-                if (count == 0) begin
-                    state <= IDLE;
-                    done_o <= 1'b1;
-                end
-            end
-        endcase
-    end
-    always @(posedge clk_i) begin
-        if (done_o) begin
-            // Saturate if necessary
-            if (acc >= 2 ** 46) begin
-                signal_o <= 8388607;
-            end
-            else if (acc < -(2 ** 46)) begin
-                signal_o <= -8388608;
-            end
-            else begin
-                signal_o <= acc[46:23];
-            end
-        end
-    end
+    // delay ch1 by 90 degrees + delay line
+    FIRFilter #(
+        .COEFF_LENGTH(NumOfStages)
+    ) shift1 (
+        .clk_i(clk_i),
+        .tick_i(tick_i),
+        .signal_i(signal_i),
+        .signal_o(signal_o),
+        .done_o(done_o),
+        .coeff(coeffs)
+    );
 endmodule
-
 
 module DelayLine (
-    // Interface signals
     input clk_i,
     input tick_i,
-    output reg done_o,
-    // Data Signals
-    input [23:0] signal_i,
-    output reg [23:0] signal_o
+    input logic signed [23:0] signal_i,
+    output logic signed [23:0] signal_o,
+    output logic done_o
 );
-    // Coefficient Storage
-    reg signed [23:0] coeff[22:0];
-    reg signed [23:0] data[22:0];
-    // Counter for iterating through coefficients.
-    reg [4:0] count;
-    // Accumulator
-    reg signed [45:0] acc;
+    parameter int NumOfStages = 23;
+    logic signed [23:0] coeffs[NumOfStages] = '{
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        8388607,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+    };
 
-    // State machine signals
-    localparam IDLE = 0;
-    localparam RUN = 1;
-
-    reg state;
-
-    initial begin
-        coeff[0] = 0;
-        coeff[1] = 0;
-        coeff[2] = 0;
-        coeff[3] = 0;
-        coeff[4] = 0;
-        coeff[5] = 0;
-        coeff[6] = 0;
-        coeff[7] = 0;
-        coeff[8] = 0;
-        coeff[9] = 0;
-        coeff[10] = 0;
-        coeff[11] = 4194304;
-        coeff[12] = 0;
-        coeff[13] = 0;
-        coeff[14] = 0;
-        coeff[15] = 0;
-        coeff[16] = 0;
-        coeff[17] = 0;
-        coeff[18] = 0;
-        coeff[19] = 0;
-        coeff[20] = 0;
-        coeff[21] = 0;
-        coeff[22] = 0;
-    end
-    always @(posedge clk_i) begin : capture
-        integer i;
-        if (tick_i) begin
-            for (i = 0; i < 22; i = i + 1) begin
-                data[i+1] <= data[i];
-            end
-            data[0] <= signal_i;
-        end
-    end
-    always @(posedge clk_i) begin
-        case (state)
-            IDLE: begin
-                done_o <= 1'b0;
-                if (tick_i) begin
-                    count <= 22;
-                    acc <= 0;
-                    state <= RUN;
-                end
-            end
-
-            RUN: begin
-                count <= count - 1'b1;
-                acc <= acc + data[count] * coeff[count];
-                if (count == 0) begin
-                    state <= IDLE;
-                    done_o <= 1'b1;
-                end
-            end
-        endcase
-    end
-    always @(posedge clk_i) begin
-        if (done_o) begin
-            signal_o <= acc[45:22];
-        end
-    end
+    // delay ch1 by 90 degrees + delay line
+    FIRFilter #(
+        .COEFF_LENGTH(NumOfStages)
+    ) shift1 (
+        .clk_i(clk_i),
+        .tick_i(tick_i),
+        .signal_i(signal_i),
+        .signal_o(signal_o),
+        .done_o(done_o),
+        .coeff(coeffs)
+    );
 endmodule
+
+// module DelayLine (
+//     // Interface signals
+//     input clk_i,
+//     input tick_i,
+//     output reg done_o,
+//     // Data Signals
+//     input [23:0] signal_i,
+//     output reg [23:0] signal_o
+// );
+//   // Coefficient Storage
+//   reg signed [23:0] coeff[22:0];
+//   reg signed [23:0] data[22:0];
+//   // Counter for iterating through coefficients.
+//   reg [4:0] count;
+//   // Accumulator
+//   reg signed [45:0] acc;
+
+//   // State machine signals
+//   localparam IDLE = 0;
+//   localparam RUN = 1;
+
+//   reg state;
+
+//   initial begin
+//     coeff[0]  = 0;
+//     coeff[1]  = 0;
+//     coeff[2]  = 0;
+//     coeff[3]  = 0;
+//     coeff[4]  = 0;
+//     coeff[5]  = 0;
+//     coeff[6]  = 0;
+//     coeff[7]  = 0;
+//     coeff[8]  = 0;
+//     coeff[9]  = 0;
+//     coeff[10] = 0;
+//     coeff[11] = 4194304;
+//     coeff[12] = 0;
+//     coeff[13] = 0;
+//     coeff[14] = 0;
+//     coeff[15] = 0;
+//     coeff[16] = 0;
+//     coeff[17] = 0;
+//     coeff[18] = 0;
+//     coeff[19] = 0;
+//     coeff[20] = 0;
+//     coeff[21] = 0;
+//     coeff[22] = 0;
+//   end
+//   always @(posedge clk_i) begin : capture
+//     integer i;
+//     if (tick_i) begin
+//       for (i = 0; i < 22; i = i + 1) begin
+//         data[i+1] <= data[i];
+//       end
+//       data[0] <= signal_i;
+//     end
+//   end
+//   always @(posedge clk_i) begin
+//     case (state)
+//       IDLE: begin
+//         done_o <= 1'b0;
+//         if (tick_i) begin
+//           count <= 22;
+//           acc   <= 0;
+//           state <= RUN;
+//         end
+//       end
+
+//       RUN: begin
+//         count <= count - 1'b1;
+//         acc   <= acc + data[count] * coeff[count];
+//         if (count == 0) begin
+//           state  <= IDLE;
+//           done_o <= 1'b1;
+//         end
+//       end
+//     endcase
+//   end
+//   always @(posedge clk_i) begin
+//     if (done_o) begin
+//       signal_o <= acc[45:22];
+//     end
+//   end
+// endmodule
 
 
 module LockInLowPass (
