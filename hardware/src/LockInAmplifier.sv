@@ -1,27 +1,27 @@
 module LockInAmplifier #(
-    parameter num_bits = 24
+    parameter int NUM_BITS = 24
 ) (
     input logic clk_i,
     input logic reset_i,
-    input logic signed [num_bits-1:0] ch1_i,  // clean reference signal
-    input logic signed [num_bits-1:0] ch2_i,  // noisy signal
-    output logic signed [num_bits-1:0] x_o,
-    output logic signed [num_bits-1:0] y_o
+    input logic signed [NUM_BITS-1:0] ch1_i,  // clean reference signal
+    input logic signed [NUM_BITS-1:0] ch2_i,  // noisy signal
+    output logic signed [NUM_BITS-1:0] x_o,
+    output logic signed [NUM_BITS-1:0] y_o
 );
 
     // Internal signals
 
     // ch1, shifted by 90 degrees and delayed
-    logic signed [num_bits-1:0] ch1_shifted;
+    logic signed [NUM_BITS-1:0] ch1_shifted;
 
     // ch1 and ch2, delayed
-    logic signed [num_bits-1:0] ch1_delayed;
-    logic signed [num_bits-1:0] ch2_delayed;
+    logic signed [NUM_BITS-1:0] ch1_delayed;
+    logic signed [NUM_BITS-1:0] ch2_delayed;
 
 
     // multipliers with correct number of bits
-    logic signed [num_bits*2-1:0] ch1_delayed_mult_ch2;
-    logic signed [num_bits*2-1:0] ch1_shifted_mult_ch2;
+    logic signed [NUM_BITS*2-1:0] ch1_delayed_mult_ch2;
+    logic signed [NUM_BITS*2-1:0] ch1_shifted_mult_ch2;
 
     // tick every 10 us
     logic tick;
@@ -63,13 +63,13 @@ module LockInAmplifier #(
     assign ch1_shifted_mult_ch2 = ch1_shifted * ch2_delayed;
 
     // low pass filters
-    logic signed [num_bits-1:0] filtered_1;
-    logic signed [num_bits-1:0] filtered_2;
+    logic signed [NUM_BITS-1:0] filtered_1;
+    logic signed [NUM_BITS-1:0] filtered_2;
 
 
     LockInLowPass lpf1 (
         .clk_i(clk_i),
-        .signal_i(ch1_delayed_mult_ch2[2*num_bits-1:24]),
+        .signal_i(ch1_delayed_mult_ch2[2*NUM_BITS-1:24]),
         .signal_o(filtered_1),
         .tick_i(tick),
         .done_o()
@@ -77,7 +77,7 @@ module LockInAmplifier #(
 
     LockInLowPass lpf2 (
         .clk_i(clk_i),
-        .signal_i(ch1_shifted_mult_ch2[2*num_bits-1:24]),
+        .signal_i(ch1_shifted_mult_ch2[2*NUM_BITS-1:24]),
         .signal_o(filtered_2),
         .tick_i(tick),
         .done_o()
@@ -182,92 +182,6 @@ module DelayLine (
         .coeff(coeffs)
     );
 endmodule
-
-// module DelayLine (
-//     // Interface signals
-//     input clk_i,
-//     input tick_i,
-//     output reg done_o,
-//     // Data Signals
-//     input [23:0] signal_i,
-//     output reg [23:0] signal_o
-// );
-//   // Coefficient Storage
-//   reg signed [23:0] coeff[22:0];
-//   reg signed [23:0] data[22:0];
-//   // Counter for iterating through coefficients.
-//   reg [4:0] count;
-//   // Accumulator
-//   reg signed [45:0] acc;
-
-//   // State machine signals
-//   localparam IDLE = 0;
-//   localparam RUN = 1;
-
-//   reg state;
-
-//   initial begin
-//     coeff[0]  = 0;
-//     coeff[1]  = 0;
-//     coeff[2]  = 0;
-//     coeff[3]  = 0;
-//     coeff[4]  = 0;
-//     coeff[5]  = 0;
-//     coeff[6]  = 0;
-//     coeff[7]  = 0;
-//     coeff[8]  = 0;
-//     coeff[9]  = 0;
-//     coeff[10] = 0;
-//     coeff[11] = 4194304;
-//     coeff[12] = 0;
-//     coeff[13] = 0;
-//     coeff[14] = 0;
-//     coeff[15] = 0;
-//     coeff[16] = 0;
-//     coeff[17] = 0;
-//     coeff[18] = 0;
-//     coeff[19] = 0;
-//     coeff[20] = 0;
-//     coeff[21] = 0;
-//     coeff[22] = 0;
-//   end
-//   always @(posedge clk_i) begin : capture
-//     integer i;
-//     if (tick_i) begin
-//       for (i = 0; i < 22; i = i + 1) begin
-//         data[i+1] <= data[i];
-//       end
-//       data[0] <= signal_i;
-//     end
-//   end
-//   always @(posedge clk_i) begin
-//     case (state)
-//       IDLE: begin
-//         done_o <= 1'b0;
-//         if (tick_i) begin
-//           count <= 22;
-//           acc   <= 0;
-//           state <= RUN;
-//         end
-//       end
-
-//       RUN: begin
-//         count <= count - 1'b1;
-//         acc   <= acc + data[count] * coeff[count];
-//         if (count == 0) begin
-//           state  <= IDLE;
-//           done_o <= 1'b1;
-//         end
-//       end
-//     endcase
-//   end
-//   always @(posedge clk_i) begin
-//     if (done_o) begin
-//       signal_o <= acc[45:22];
-//     end
-//   end
-// endmodule
-
 
 module LockInLowPass (
     // Interface signals
