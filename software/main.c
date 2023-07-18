@@ -40,7 +40,7 @@ struct netif *echo_netif;
 volatile u32 EthBytesReceived;
 
 // Global Variables for Ethernet handling
-u16_t RemotePort = 8;
+u16_t RemotePort = 12345;
 struct ip4_addr RemoteAddr;
 struct udp_pcb send_pcb;
 
@@ -182,12 +182,11 @@ int main() {
       // convert the phase to a fixed point number, with 3 decimal places
       phase_int = (int32_t)(phase_d * 1000);
 
-      // print the values
-      // note that xil_printf can only print floats, not doubles
-      // xil_printf("x_int: %f, y_int: %f, phase: %f\n\r", (float)x_d, (float)y_d, (float)phase_d);
-
       // print using printf
-      printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
+      // printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
+
+      // print phase_int
+      // printf("%d\n\r", phase_int);
 
       // store phase_int in vector
       phases[vals_idx] = phase_int;
