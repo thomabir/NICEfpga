@@ -20,6 +20,9 @@
 #include "sleep.h"
 #include "xgpio.h"
 #include "xil_cache.h"
+#include "math.h"
+
+#define PI 3.14159265359
 
 /* defined by each RAW mode application */
 void print_app_header();
@@ -76,7 +79,7 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 254);
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 250);
   // IP4_ADDR(&Remotenetmask, 255, 255, 255,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -112,14 +115,20 @@ int main() {
   int pkg_no = 0;
   int vals_idx = 0;
 
-  XGpio xgpio_in1;
+  XGpio xgpio_in1, xgpio_in2, xgpio_in3;
 
-  int32_t val;
-  uint8_t counter, prev_counter;
-  int vals[10];
+  int32_t x_int, y_int, phase_int, counter, prev_counter;
+  double x_d, y_d, phase_d;
+  int32_t phases[10];
 
   XGpio_Initialize(&xgpio_in1, XPAR_AXI_GPIO_0_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in1, 1, 1);
+
+  XGpio_Initialize(&xgpio_in2, XPAR_AXI_GPIO_1_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in2, 1, 1);
+
+  XGpio_Initialize(&xgpio_in3, XPAR_AXI_GPIO_2_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in3, 1, 1);
 
   /* receive and process packets */
 
@@ -151,31 +160,50 @@ int main() {
 
   while (1) {
     // Get the current value via xgpio
-    val = XGpio_DiscreteRead(&xgpio_in1, 1);
-
-    // the 8 MSB are a counter, the other 24 bits are the value
-    counter = val >> 24;
-    // val = val & 0x00FFFFFF;
+    x_int = XGpio_DiscreteRead(&xgpio_in1, 1);
+    y_int = XGpio_DiscreteRead(&xgpio_in2, 1);
+    counter = XGpio_DiscreteRead(&xgpio_in3, 1);
 
     // if the counter is exactly 1 higher than the previous counter, we have a new value, and we perform the processing.
     // Otherwise, wait 10 us and try again
     // TODO use interrupts for this
     if (counter == prev_counter + 1) {
-      // store value in vector
-      vals[vals_idx] = val;
+
+      // cast x and y to doubles
+      x_d = (double)x_int;
+      y_d = (double)y_int;
+
+      // calculate the phase using atan2
+      phase_d = -atan2(y_d, x_d);
+
+      // convert from rad to deg
+      phase_d = phase_d * 180. / PI;
+
+      // convert the phase to a fixed point number, with 3 decimal places
+      phase_int = (int32_t)(phase_d * 1000);
+
+      // print the values
+      // note that xil_printf can only print floats, not doubles
+      // xil_printf("x_int: %f, y_int: %f, phase: %f\n\r", (float)x_d, (float)y_d, (float)phase_d);
+
+      // print using printf
+      printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
+
+      // store phase_int in vector
+      phases[vals_idx] = phase_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
       xemacif_input(echo_netif);
 
-      // if vals is full, send a package
+      // if phases is full, send a package
       if (vals_idx == 9) {
         // print the package number
         // xil_printf("Package %d\n\r", pkg_no);
 
-        // set the payload to the vals array
+        // set the payload to the phases array
         psnd = pbuf_alloc(PBUF_TRANSPORT, 10 * sizeof(int), PBUF_REF);
-        psnd->payload = &vals;
+        psnd->payload = &phases;
 
         // send the package
         udpsenderr = udp_sendto(&send_pcb, psnd, &RemoteAddr, RemotePort);
