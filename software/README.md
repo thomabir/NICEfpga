@@ -7,15 +7,16 @@
    2. Use the `lwIP Echo Server` template.
 2. In the created project, replace `echo.c` and `main.c` with the files in this repository.
 3. Add `includes.h` from this repository to the `src` folder of the project.
-4. Build and run the project.
+4. Add the compile flag `-lm` to the linker flags of the project: Right-click on `NICEfpga.prj`, located in `Explorer -> NICEfpga_system -> NICEfpga -> NICEfpga.prj`. Select `Properties -> C/C++ Build -> Settings -> ARM v7 gcc linker -> Librarier`, and add `-m` to the list of linker flags.
+5. Build and run the project.
 
-The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.254`), and to port `RemotePort` (default: `8`). To receive the data on the remote computer, use
+The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.250`), and to port `RemotePort` (default: `12345`). To receive the data on the remote computer, use
 
 ```sh
-sudo nc -u -l 8
+sudo nc -u -l 12345
 ```
 
-to start listening for UDP packets on port 8.
+to start listening for UDP packets on port 12345.
 
 Alternatively, you can use [NICEcontrol](https://github.com/thomabir/NICEcontrol), which is a GUI for monitoring and controlling the NICE experiment.
 
