@@ -6,7 +6,8 @@ module MainSV (
     output logic [7:0] pmoda_o,
     output logic [3:0] led_o,
     output logic signed [31:0] oreg1,
-    output logic signed [31:0] oreg2
+    output logic signed [31:0] oreg2,
+    output logic unsigned [31:0] oreg3
 );
     // reset
     logic reset;
@@ -83,7 +84,7 @@ module MainSV (
     end
 
 
-    // the 8 MSBs of oreg are the counter, the 24 LSBs are the ADC value
-    assign oreg1 = {counter1, x};
-    assign oreg2 = {counter1, y};
+    assign oreg1 = x;
+    assign oreg2 = y;
+    assign oreg3 = counter;
 endmodule
