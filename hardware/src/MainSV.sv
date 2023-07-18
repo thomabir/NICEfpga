@@ -73,13 +73,13 @@ module MainSV (
 
 
     // A counter that increases by 1 every time the lock-in amplifier is updated
-    logic unsigned [7:0] counter1;
+    logic unsigned [31:0] counter;
     always_ff @(posedge clk) begin
         if (reset) begin
-            counter1 <= 0;
+            counter <= 0;
         end
         else if (lockin_done_o) begin
-            counter1 <= counter1 + 1;
+            counter <= counter + 1;
         end
     end
 
