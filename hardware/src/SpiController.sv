@@ -4,8 +4,8 @@
 // MSB first
 
 module SpiController #(
-    parameter CLOCK_DIVIDE = 2,  // factor by which to divide clk_i to get sclk_o
-    parameter FRAME_WIDTH = 32  // length in bits of a single SPI transfer
+    parameter int CLOCK_DIVIDE = 2,  // factor by which to divide clk_i to get sclk_o
+    parameter int FRAME_WIDTH = 32  // length in bits of a single SPI transfer
 ) (
     input clk_i,  // FPGA clock
     input reset_i,  // reset
@@ -23,7 +23,7 @@ module SpiController #(
     input unsigned [FRAME_WIDTH-1:0] data_i  // data to send
 );
 
-    parameter COUNTER_WIDTH = $clog2(FRAME_WIDTH) + 1;
+    parameter int COUNTER_WIDTH = $clog2(FRAME_WIDTH) + 1;
 
     typedef enum logic [4:0] {
         IDLE,  // wait for start_i = 1
@@ -89,7 +89,8 @@ module SpiController #(
 
             // leading edge of the clock
             CLK_LEAD: begin
-                state_d.data_rx[state_q.bit_counter-1] = spi_miso_i;  // CPHA = 0: read data on leading edge
+                // CPHA = 0: read data on leading edge
+                state_d.data_rx[state_q.bit_counter-1] = spi_miso_i;
 
                 if (state_q.clk_divider > 0) begin  // stay in CLK_LEAD
                     state_d.clk_divider = state_q.clk_divider - 1;
@@ -97,7 +98,7 @@ module SpiController #(
                 else begin  // go to next state
                     state_d.clk_divider = CLOCK_DIVIDE;
                     state_d.state = CLK_TRAIL;
-                    state_d.bit_counter = state_q.bit_counter - 1;  // prepare tx data at trailing edge
+                    state_d.bit_counter = state_q.bit_counter - 1;
                 end
             end
 
