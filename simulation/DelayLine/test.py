@@ -35,11 +35,11 @@ async def test_white(dut):
     n_steps = 300
     fs = 64e3  # sampling rate, Hz
     dt = 1 / fs  # sampling interval, s
-    dt_ns = dt * 1e9 # sampling interval, ns
+    dt_ns = dt * 1e9  # sampling interval, ns
     dt_ns_approx = np.round(dt_ns / 10) * 10  # sampling interval, rounded to nearest 10 ns, ns
     t = np.arange(n_steps) * dt
 
-    offset = 0. # InputFilter already subtract the DC offset
+    offset = 0.0  # InputFilter already subtract the DC offset
     signal_i = white_noise(n_steps, dc=offset, std=0.1)
     signal_i_int = np.round(signal_i * 2**23)
 
@@ -87,7 +87,6 @@ async def test_white(dut):
     # signal_i_F = fft.fft(signal_i)
     signal_delay_o_F = fft.fft(signal_delay_o)
     signal_hilbert_o_F = fft.fft(signal_hilbert_o)
-
 
     # shift
     signal_delay_o_F = fft.fftshift(signal_delay_o_F)
