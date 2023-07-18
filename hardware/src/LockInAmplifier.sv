@@ -184,113 +184,45 @@ module DelayLine (
 endmodule
 
 module LockInLowPass (
-    // Interface signals
     input clk_i,
     input tick_i,
-    output reg done_o,
-    // Data Signals
-    input [23:0] signal_i,
-    output reg [23:0] signal_o
+    input logic signed [23:0] signal_i,
+    output logic signed [23:0] signal_o,
+    output logic done_o
 );
-    // Coefficient Storage
-    reg signed [23:0] coeff[40:0];
-    reg signed [23:0] data[40:0];
-    // Counter for iterating through coefficients.
-    reg [5:0] count;
-    // Accumulator
-    reg signed [49:0] acc;
+    parameter int NumOfStages = 21;
+    logic signed [23:0] coeffs[NumOfStages] = '{
+        15206,
+        31627,
+        -44293,
+        -114889,
+        85926,
+        301009,
+        -130868,
+        -729553,
+        165763,
+        2612788,
+        4015347,
+        2612788,
+        165763,
+        -729553,
+        -130868,
+        301009,
+        85926,
+        -114889,
+        -44293,
+        31627,
+        15206
+    };
 
-    // State machine signals
-    localparam IDLE = 0;
-    localparam RUN = 1;
-
-    reg state;
-
-    initial begin
-        coeff[0] = 833;
-        coeff[1] = 4093;
-        coeff[2] = 12013;
-        coeff[3] = 25975;
-        coeff[4] = 43978;
-        coeff[5] = 57966;
-        coeff[6] = 52934;
-        coeff[7] = 9997;
-        coeff[8] = -85448;
-        coeff[9] = -231735;
-        coeff[10] = -399239;
-        coeff[11] = -525150;
-        coeff[12] = -520328;
-        coeff[13] = -290355;
-        coeff[14] = 232965;
-        coeff[15] = 1059201;
-        coeff[16] = 2118540;
-        coeff[17] = 3263323;
-        coeff[18] = 4295643;
-        coeff[19] = 5015229;
-        coeff[20] = 5273385;
-        coeff[21] = 5015229;
-        coeff[22] = 4295643;
-        coeff[23] = 3263323;
-        coeff[24] = 2118540;
-        coeff[25] = 1059201;
-        coeff[26] = 232965;
-        coeff[27] = -290355;
-        coeff[28] = -520328;
-        coeff[29] = -525150;
-        coeff[30] = -399239;
-        coeff[31] = -231735;
-        coeff[32] = -85448;
-        coeff[33] = 9997;
-        coeff[34] = 52934;
-        coeff[35] = 57966;
-        coeff[36] = 43978;
-        coeff[37] = 25975;
-        coeff[38] = 12013;
-        coeff[39] = 4093;
-        coeff[40] = 833;
-    end
-    always @(posedge clk_i) begin : capture
-        integer i;
-        if (tick_i) begin
-            for (i = 0; i < 40; i = i + 1) begin
-                data[i+1] <= data[i];
-            end
-            data[0] <= signal_i;
-        end
-    end
-    always @(posedge clk_i) begin
-        case (state)
-            IDLE: begin
-                done_o <= 1'b0;
-                if (tick_i) begin
-                    count <= 40;
-                    acc <= 0;
-                    state <= RUN;
-                end
-            end
-
-            RUN: begin
-                count <= count - 1'b1;
-                acc <= acc + data[count] * coeff[count];
-                if (count == 0) begin
-                    state <= IDLE;
-                    done_o <= 1'b1;
-                end
-            end
-        endcase
-    end
-    always @(posedge clk_i) begin
-        if (done_o) begin
-            // Saturate if necessary
-            if (acc >= 2 ** 48) begin
-                signal_o <= 8388607;
-            end
-            else if (acc < -(2 ** 48)) begin
-                signal_o <= -8388608;
-            end
-            else begin
-                signal_o <= acc[48:25];
-            end
-        end
-    end
+    FIRFilter #(
+        .COEFF_LENGTH(NumOfStages)
+    ) shift1 (
+        .clk_i(clk_i),
+        .tick_i(tick_i),
+        .signal_i(signal_i),
+        .signal_o(signal_o),
+        .done_o(done_o),
+        .coeff(coeffs)
+    );
 endmodule
