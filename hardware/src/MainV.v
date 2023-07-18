@@ -8,7 +8,7 @@ module MainV(
     output [31:0] x,
     output [31:0] y
 );
-    mainSV main_sv (
+    MainSV main_sv (
         .clk(clk),
         .sw_i(sw),
         .btn_i(btn),
