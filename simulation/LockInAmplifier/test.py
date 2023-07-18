@@ -45,10 +45,9 @@ async def test_white(dut):
     signal_1i_int = np.round(signal_1i * 2**23)
     signal_2i_int = np.round(signal_2i * 2**23)
 
-
     signal_x_o = np.zeros(n_steps)
     signal_y_o = np.zeros(n_steps)
-    
+
     cocotb.start_soon(clock.start())
     await FallingEdge(dut.clk_i)  # Synchronize with the clock
 
@@ -62,7 +61,7 @@ async def test_white(dut):
         dut.ch1_i.value = int(signal_1i_int[i])
         dut.ch2_i.value = int(signal_2i_int[i])
         dut.tick_i.value = 1
-        
+
         signal_x_o[i] = dut.x_o.value
         signal_y_o[i] = dut.y_o.value
 

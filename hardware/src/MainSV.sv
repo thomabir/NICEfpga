@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module MainSV (
     input clk,
     input logic [1:0] sw_i,
@@ -10,7 +8,6 @@ module MainSV (
     output logic signed [31:0] oreg1,
     output logic signed [31:0] oreg2
 );
-
     // reset
     logic reset;
     assign reset = btn_i[0];
@@ -31,8 +28,6 @@ module MainSV (
         .ch2_o(adc2_o),
         .tick_o(adc_tick_o)
     );
-
-
 
 
     // input filters
@@ -57,6 +52,7 @@ module MainSV (
         .data_o (ifilt2_o),
         .tick_o ()
     );
+
 
     // lock-in amplifier
     logic signed [23:0] x;
@@ -87,32 +83,7 @@ module MainSV (
     end
 
 
-    //   DacWriter dac1 (
-    //       .clk_i(clk),
-    //       .reset_i(reset),
-    //       .start_i(tick1_o),
-    //       .spi_sclk_o(pmoda_o[6]),
-    //       .spi_mosi_o(pmoda_o[4]),
-    //       .spi_cs_o(pmoda_o[5]),
-    //       .data_i(ifilt1_o[23:8])
-    //   );
-
-
-    //    DacWriter2 dac12(
-    //        .clk_i(clk),
-    //        .reset_i(reset),
-    //        .start_i(tick1_o),
-    //        .spi_clk_o(pmoda_o[6]),
-    //        .spi_mosi_o(pmoda_o[4]),
-    //        .spi_cs_o(pmoda_o[5]),
-    //        .data_i(adc1_o[23:8])
-    //    );
-
-
     // the 8 MSBs of oreg are the counter, the 24 LSBs are the ADC value
     assign oreg1 = {counter1, x};
     assign oreg2 = {counter1, y};
-
-
-
 endmodule

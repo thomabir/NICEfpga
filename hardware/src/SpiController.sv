@@ -1,4 +1,3 @@
-`timescale 10ns / 1ns
 // CPOL 0: sclk idles low
 // CPHA 0: data is valid on sclk leading edge
 // MSB first
