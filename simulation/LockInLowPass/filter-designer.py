@@ -18,8 +18,8 @@ if not os.path.exists(plot_dir):
 
 fs = 64e3  # sampling frequency, Hz
 
-f1 = 11e3  # end of passband, Hz
-f2 = 20e3  # start of stopband, Hz
+f1 = 1e3  # end of passband, Hz
+f2 = 10e3  # start of stopband, Hz
 
 f = np.linspace(0, fs / 2, 1000)
 
@@ -34,7 +34,7 @@ weight[(f >= f2)] = 1
 # remove every second element from weight
 weight_bands = weight[::2]
 
-num_stages_fir_filter = 21
+num_stages_fir_filter = 41
 
 # use firls to design the filter
 fir_filter = sig.firls(num_stages_fir_filter, f, desired_gain, weight_bands, fs=fs)
