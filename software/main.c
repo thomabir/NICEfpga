@@ -118,7 +118,7 @@ int main() {
   XGpio xgpio_in1, xgpio_in2, xgpio_in3;
 
   int32_t x_int, y_int, phase_int, counter, prev_counter;
-  double x_d, y_d, phase_d;
+  double x_d, y_d, phase_d, prev_phase_d;
   int32_t phases[10];
 
   XGpio_Initialize(&xgpio_in1, XPAR_AXI_GPIO_0_DEVICE_ID);
@@ -158,6 +158,8 @@ int main() {
   /* Save the PCB to the global variable */
   send_pcb = *pcb;
 
+  prev_phase_d = 0;
+
   while (1) {
     // Get the current value via xgpio
     x_int = XGpio_DiscreteRead(&xgpio_in1, 1);
@@ -178,6 +180,16 @@ int main() {
 
       // convert from rad to deg
       phase_d = phase_d * 180. / PI;
+
+      // unwrap the phase
+      if (phase_d < prev_phase_d - 180) {
+        phase_d += 360;
+      } else if (phase_d > prev_phase_d + 180) {
+        phase_d -= 360;
+      }
+
+      // set the previous phase to the current phase
+      prev_phase_d = phase_d;
 
       // convert the phase to a fixed point number, with 3 decimal places
       phase_int = (int32_t)(phase_d * 1000);
