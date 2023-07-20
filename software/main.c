@@ -119,7 +119,7 @@ int main() {
 
   int32_t x_int, y_int, phase_int, counter, prev_counter;
   double x_d, y_d, phase_d, prev_phase_d;
-  int32_t phases[10];
+  int payload[20]; // 10 x (counter , measurement) = 20 ints
 
   XGpio_Initialize(&xgpio_in1, XPAR_AXI_GPIO_0_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in1, 1, 1);
@@ -200,8 +200,9 @@ int main() {
       // print phase_int
       // printf("%d\n\r", phase_int);
 
-      // store phase_int in vector
-      phases[vals_idx] = phase_int;
+      // store counter and phase_int in payload
+      payload[2 * vals_idx] = counter;
+      payload[2 * vals_idx + 1] = phase_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
@@ -213,8 +214,8 @@ int main() {
         // xil_printf("Package %d\n\r", pkg_no);
 
         // set the payload to the phases array
-        psnd = pbuf_alloc(PBUF_TRANSPORT, 10 * sizeof(int), PBUF_REF);
-        psnd->payload = &phases;
+        psnd = pbuf_alloc(PBUF_TRANSPORT, 20 * sizeof(int), PBUF_REF);
+        psnd->payload = &payload;
 
         // send the package
         udpsenderr = udp_sendto(&send_pcb, psnd, &RemoteAddr, RemotePort);
