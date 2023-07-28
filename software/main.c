@@ -17,10 +17,11 @@
 
 #include "includes.h"
 #include "lwip/udp.h"
+#include "math.h"
 #include "sleep.h"
 #include "xgpio.h"
 #include "xil_cache.h"
-#include "math.h"
+#include "xspips.h"
 
 #define PI 3.14159265359
 
@@ -60,7 +61,115 @@ void print_app_header() {
   xil_printf("UDP packets sent to port 7 will be processed\n\r");
 }
 
+void SPITransfer(XSpiPs *SpiInstancePtr, u16 SendBufPtr, u16 *RecvBufPtr) {
+  u8 SendBufPtr_u8[2] = {0x00, 0x00};
+  u8 RecvBufPtr_u8[2] = {0x00, 0x00};
+
+  // set elements of u8 arrays
+  SendBufPtr_u8[0] = (SendBufPtr >> 8) & 0xFF;
+  SendBufPtr_u8[1] = SendBufPtr & 0xFF;
+
+  u32 ByteCount = 2;
+  s32 Status;
+
+  // transfer data
+  Status = XSpiPs_Transfer(SpiInstancePtr, SendBufPtr_u8, RecvBufPtr_u8, ByteCount);
+  if (Status != XST_SUCCESS) {
+    xil_printf("SPI transfer failed\r\n");
+  }
+
+  // wait 10 us
+  usleep(10);
+
+  // populate RecvBufPtr
+  *RecvBufPtr = RecvBufPtr_u8[0] << 8 | RecvBufPtr_u8[1];
+
+  // abort transfer
+  XSpiPs_Abort(SpiInstancePtr);
+}
+
 int main() {
+  // prepare data
+  // u16 SendBufPtr[3] = {0x6110, 0x6401, 0x6400};
+  // u16 RecvBufPtr[3] = {0x0001, 0x0002, 0x0003};
+  // u32 ByteCount = 3;
+  // u32 Status;
+
+  // cast sendbufptr and recvbufptr to u8
+  // u8 *SendBufPtr_u8 = (u8 *)SendBufPtr;
+  // u8 *RecvBufPtr_u8 = (u8 *)RecvBufPtr;
+
+  // setup SPI
+  xil_printf("SPI test\r\n");
+  XSpiPs spi0;
+  XSpiPs_Config *SpiConfig;
+  SpiConfig = XSpiPs_LookupConfig(XPAR_XSPIPS_0_DEVICE_ID);
+  int statuss;
+  if (NULL == SpiConfig) {
+    xil_printf("Lookup failed\r\n");
+  }
+
+  statuss = XSpiPs_CfgInitialize(&spi0, SpiConfig, SpiConfig->BaseAddress);
+  if (statuss != XST_SUCCESS) {
+    xil_printf("Initialization failed\r\n");
+  }
+
+  statuss = XSpiPs_SelfTest(&spi0);
+  if (statuss != XST_SUCCESS) {
+    return XST_FAILURE;
+  }
+
+  // enable device
+  XSpiPs_Enable(&spi0);
+
+  // set options: master mode
+  XSpiPs_SetOptions(&spi0, XSPIPS_MASTER_OPTION);
+
+  // set prescaler (sclk = 166 MHz / 64 = 2.6 MHz)
+  XSpiPs_SetClkPrescaler(&spi0, XSPIPS_CLK_PRESCALE_64);
+
+  s32 Status;
+
+  // select slave 00
+  XSpiPs_SetSlaveSelect(&spi0, 0x00);
+
+  // initialise receive buffer
+  u16 RecvBufPtr[1] = {0x0000};
+
+  // transfer data in a loop
+  // to send: 0x6110 0x6401 0x6400
+  while (1) {
+    SPITransfer(&spi0, 0x6110, RecvBufPtr);
+    SPITransfer(&spi0, 0x6401, RecvBufPtr);
+    SPITransfer(&spi0, 0x6400, RecvBufPtr);
+
+    // print the received data
+    xil_printf("Received: %x\r\n", RecvBufPtr[0]);
+
+    // deselect slave 00
+    // XSpiPs_SetSlaveSelect(&spi0, 0x0F);
+
+    // Deselect the slave (if your slave select line is active low)
+    // XSpiPs_SetSlaveSelect(&spi0, 0x00);
+
+    // print the status
+    // xil_printf("Status: %x\r\n", Status);
+
+    // print value of XST_DEVICE_BUSY
+    // xil_printf("XST_DEVICE_BUSY: %x\r\n", XST_DEVICE_BUSY);
+
+    // print the sent data
+    // xil_printf("Sent: %x\r\n", SendBufPtr_u8);
+
+    // // print the received data
+    // xil_printf("Received: %x\r\n", RecvBufPtr_u8);
+
+    // wait 1 ms
+    usleep(10000);
+  }
+
+  return 0;
+
   struct ip4_addr ipaddr, netmask, gw /*, Remotenetmask, Remotegw*/;
   struct pbuf *psnd;
   struct pbuf *psnd_sep;
@@ -119,7 +228,7 @@ int main() {
 
   int32_t x_int, y_int, phase_int, counter, prev_counter;
   double x_d, y_d, phase_d, prev_phase_d;
-  int payload[20]; // 10 x (counter , measurement) = 20 ints
+  int payload[20];  // 10 x (counter , measurement) = 20 ints
 
   XGpio_Initialize(&xgpio_in1, XPAR_AXI_GPIO_0_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in1, 1, 1);
@@ -170,7 +279,6 @@ int main() {
     // Otherwise, wait 10 us and try again
     // TODO use interrupts for this
     if (counter == prev_counter + 1) {
-
       // cast x and y to doubles
       x_d = (double)x_int;
       y_d = (double)y_int;
