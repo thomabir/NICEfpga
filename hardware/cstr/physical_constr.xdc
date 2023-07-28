@@ -21,10 +21,11 @@ set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS18} [get_ports {led[3]}];
 
 ## Pmoda
 ## RPi GPIO 7-0 are shared with pmoda_rpi_gpio_tri_io[7:0]
-set_property -dict {PACKAGE_PIN Y19 IOSTANDARD LVCMOS18} [get_ports {pmoda[1]}];
-set_property -dict {PACKAGE_PIN Y18 IOSTANDARD LVCMOS18} [get_ports {pmoda[0]}];
-set_property -dict {PACKAGE_PIN Y17 IOSTANDARD LVCMOS18} [get_ports {pmoda[3]}];
-set_property -dict {PACKAGE_PIN Y16 IOSTANDARD LVCMOS18} [get_ports {pmoda[2]}];
+set_property -dict {PACKAGE_PIN Y18 IOSTANDARD LVCMOS18} [get_ports {spi0_sclk}];
+set_property -dict {PACKAGE_PIN Y19 IOSTANDARD LVCMOS18} [get_ports {spi0_mosi}];
+set_property -dict {PACKAGE_PIN Y16 IOSTANDARD LVCMOS18} [get_ports {spi0_miso}];
+set_property -dict {PACKAGE_PIN Y17 IOSTANDARD LVCMOS18} [get_ports {spi0_ss}];
+
 set_property -dict {PACKAGE_PIN U19 IOSTANDARD LVCMOS18} [get_ports {pmoda[5]}];
 set_property -dict {PACKAGE_PIN U18 IOSTANDARD LVCMOS18} [get_ports {pmoda[4]}];
 set_property -dict {PACKAGE_PIN W19 IOSTANDARD LVCMOS18} [get_ports {pmoda[7]}];
