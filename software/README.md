@@ -13,7 +13,7 @@
 The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.250`), and to port `RemotePort` (default: `12345`). To receive the data on the remote computer, use
 
 ```sh
-sudo nc -u -l 12345
+nc -u -l 12345
 ```
 
 to start listening for UDP packets on port 12345.
