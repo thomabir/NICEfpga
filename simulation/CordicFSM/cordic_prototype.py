@@ -27,7 +27,15 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
     y = float_to_fixed(y, n_bits)
 
     for i in range(n_iter):
-        gamma[i] = float_to_fixed(gamma[i], n_bits)
+        gamma[i] = float_to_fixed(gamma[i] * 0.5, n_bits)
+
+    # print in this format: {10, 3, ...}
+    print("{", end="")
+    for i in range(n_iter):
+        print(f"{gamma[i]}, ", end="")
+    print("}")
+
+    print(gamma)
 
     # iterate the CORDIC algorithm
     phi = 0
