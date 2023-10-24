@@ -52,9 +52,10 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
         phi += d * gamma[j]
 
         # assert all values are still in range
-        assert -(2 ** (n_bits_extended - 1)) <= x < 2 ** (n_bits_extended - 1)
-        assert -(2 ** (n_bits_extended - 1)) <= y < 2 ** (n_bits_extended - 1)
-        assert -(2 ** (n_bits_extended - 1)) <= phi < 2 ** (n_bits_extended - 1)
+        max_val = 2 ** (n_bits_extended - 1) - 1
+        min_val = -(2 ** (n_bits_extended - 1))
+        for var in [x, y, phi]:
+            assert min_val <= var <= max_val
 
     # Convert back to floating point
     phi = fixed_to_float(phi, n_bits)
