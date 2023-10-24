@@ -35,8 +35,6 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
         print(f"{gamma[i]}, ", end="")
     print("}")
 
-    print(gamma)
-
     # iterate the CORDIC algorithm
     phi = 0
     for j in range(n_iter):
