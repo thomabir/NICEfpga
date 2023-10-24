@@ -6,7 +6,7 @@ module CordicFSM #(
     input logic start_i,  // start the computation
     input logic signed [BIT_WIDTH-1:0] sin_i,  // sine
     input logic signed [BIT_WIDTH-1:0] cos_i,  // cosine
-    input logic signed [BIT_WIDTH-1:0] angle_table[BIT_WIDTH],  // angle table
+    input logic signed [BIT_WIDTH:0] angle_table[BIT_WIDTH],  // angle table
     output logic signed [BIT_WIDTH-1:0] phi_o,  // phase
     output logic done_o  // computation is done, result is valid
 );
@@ -24,9 +24,9 @@ module CordicFSM #(
     typedef struct packed {
         state_e state;
         logic [ITERATOR_WIDTH-1:0] i;  // counts from 0 to BIT_WIDTH-1
-        logic signed [BIT_WIDTH-1:0] x;  // x coordinate
-        logic signed [BIT_WIDTH-1:0] y;  // y coordinate
-        logic signed [BIT_WIDTH-1:0] phi;  // phase
+        logic signed [BIT_WIDTH:0] x;  // x coordinate
+        logic signed [BIT_WIDTH:0] y;  // y coordinate
+        logic signed [BIT_WIDTH:0] phi;  // phase
         logic signed [BIT_WIDTH-1:0] phi_final;  // final phase, always valid
     } state_t;
 
@@ -48,8 +48,8 @@ module CordicFSM #(
             // take inputs, get ready for computation
             IDLE: begin
                 state_d.i = 0;
-                state_d.x = sin_i;
-                state_d.y = cos_i;
+                state_d.x = 25'(sin_i);
+                state_d.y = 25'(cos_i);
                 state_d.phi = 0;
                 if (start_i) state_d.state = ITERATE;
             end
@@ -57,7 +57,9 @@ module CordicFSM #(
             ITERATE: begin
                 if (state_q.i == ITERATOR_WIDTH'(BIT_WIDTH - 1)) begin
                     state_d.state = DONE;
-                    state_d.phi_final = state_q.phi;
+
+                    // final phase: state_d.phi_final = MSB of state_q.phi
+                    state_d.phi_final = state_q.phi[BIT_WIDTH:1];
                 end
                 else begin
                     if (state_q.y >= 0) begin

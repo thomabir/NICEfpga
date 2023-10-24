@@ -8,14 +8,15 @@ module CordicFSMTest (
     output logic done_o  // computation is done, result is valid
 );
 
-    logic signed [23:0] angle_table[24] = '{
-        3294198,
-        1944679,
-        1027514,
-        521582,
-        261803,
-        131029,
-        65530,
+    logic signed [24:0] angle_table[24] = '{
+        6588397,
+        3889358,
+        2055029,
+        1043165,
+        523606,
+        262058,
+        131061,
+        65534,
         32767,
         16383,
         8191,
@@ -31,7 +32,6 @@ module CordicFSMTest (
         7,
         3,
         1,
-        0,
         0
     };
 

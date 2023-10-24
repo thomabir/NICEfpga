@@ -1,27 +1,25 @@
 """Tests for the CORDIC Finite State Machine, which recovers the phase phi given sin(phi) and cos(phi)."""
 
-import math
-import random
-
 import cocotb
 import matplotlib.pyplot as plt
 import numpy as np
 from cocotb.clock import Clock
-from cocotb.triggers import FallingEdge, Timer
+from cocotb.triggers import FallingEdge
 
 
-def float_to_fixed(x, n_bits=16):
+def float_to_fixed(x, n_bits=24):
     """Converts a floating point number to a signed fixed point number with n_bits bits."""
     return int(x * (2 ** (n_bits - 1)))
 
 
-def fixed_to_float(x, n_bits=16):
+def fixed_to_float(x, n_bits=24):
     """Converts a signed fixed point number with n_bits bits to a floating point number."""
     return x / (2 ** (n_bits - 1))
 
 
-@cocotb.test()
+@cocotb.test()  # pylint: disable=no-value-for-parameter
 async def cordic_test(dut):
+    """Supply a range of sines and cosines to the CORDIC FSM and check that the correct phase is recovered, up to a constant multipler."""
     clock = Clock(dut.clk_i, 10, units="ns")  # 100 MHz clock
     cocotb.start_soon(clock.start())
 
@@ -32,10 +30,10 @@ async def cordic_test(dut):
 
     for i, phi_true in enumerate(phis_true):
         # convert to fixed point
-        x = float_to_fixed(np.cos(phi_true))
-        y = float_to_fixed(np.sin(phi_true))
+        x = float_to_fixed(np.cos(phi_true), n_bits=23)
+        y = float_to_fixed(np.sin(phi_true), n_bits=23)
 
-        print(f"phi_true = {phi_true}, x = {x}, y = {y}")
+        # print(f"phi_true = {phi_true}, x = {x}, y = {y}")
 
         # synchronize with the clock
         await FallingEdge(dut.clk_i)
@@ -56,7 +54,7 @@ async def cordic_test(dut):
         dut.start_i.value = 0
 
         # wait for the computation to finish
-        while dut.done_o.value == 0:
+        while not dut.done_o.value:
             await FallingEdge(dut.clk_i)
 
         # read the output
