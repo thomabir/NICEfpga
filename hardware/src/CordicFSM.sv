@@ -6,7 +6,7 @@ module CordicFSM #(
     input logic start_i,  // start the computation
     input logic signed [BIT_WIDTH-1:0] sin_i,  // sine
     input logic signed [BIT_WIDTH-1:0] cos_i,  // cosine
-    input logic signed [BIT_WIDTH-1:0] angle_table[BIT_WIDTH], // angle table
+    input logic signed [BIT_WIDTH-1:0] angle_table[BIT_WIDTH],  // angle table
     output logic signed [BIT_WIDTH-1:0] phi_o,  // phase
     output logic done_o  // computation is done, result is valid
 );
