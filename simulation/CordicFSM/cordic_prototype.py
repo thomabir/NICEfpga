@@ -14,27 +14,42 @@ def fixed_to_float(x, n_bits=16):
     return x / (2 ** (n_bits - 1))
 
 
+def get_gamma(n_iter=16, n_bits=16):
+    """Returns the CORDIC rotation angles gamma_i."""
+
+    gamma = [np.arctan(2 ** (-i)) for i in range(n_iter)]
+
+    # convert to fixed point
+    for i in range(n_iter):
+        gamma[i] = float_to_fixed(gamma[i], n_bits)
+
+    return gamma
+
+def print_verilog_array(array):
+
+    # print in this format: {10, 3, ...}
+    print("{", end="")
+    for i in range(len(array)):
+        print(f"{array[i]}, ", end="")
+    print("}")
+
+
 def cartesian_to_phi_cordic(x, y, n_iter=16):
     """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm."""
 
     n_bits = n_iter
     n_bits_extended = n_bits + 1  # to avoid overflow for internal variables
 
+    # define the maximum and minimum values for the fixed point variables
+    max_val = 2 ** (n_bits_extended - 1) - 1
+    min_val = -(2 ** (n_bits_extended - 1))
+
     # Initialize the CORDIC rotation table
-    gamma = [np.arctan(2 ** (-i)) for i in range(n_iter)]
+    gammas = get_gamma(n_iter, n_bits)
 
     # convert to fixed point
     x = float_to_fixed(x, n_bits)
     y = float_to_fixed(y, n_bits)
-
-    for i in range(n_iter):
-        gamma[i] = float_to_fixed(gamma[i], n_bits)
-
-    # print in this format: {10, 3, ...}
-    print("{", end="")
-    for i in range(n_iter):
-        print(f"{gamma[i]}, ", end="")
-    print("}")
 
     # iterate the CORDIC algorithm
     phi = 0
@@ -49,11 +64,9 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
         x, y = x + (y >> j) * d, y - (x >> j) * d
 
         # keep track of the total rotation angle
-        phi += d * gamma[j]
+        phi += d * gammas[j]
 
         # assert all values are still in range
-        max_val = 2 ** (n_bits_extended - 1) - 1
-        min_val = -(2 ** (n_bits_extended - 1))
         for var in [x, y, phi]:
             assert min_val <= var <= max_val
 
@@ -67,10 +80,15 @@ def main():
     """Plot the CORDIC algorithm's output phi as a function of the true phi."""
 
     n_iter = 24
+    n_bits = 24
 
     phis_true = np.linspace(-np.pi / 2, np.pi / 2, 100)
     xs = np.cos(phis_true)
     ys = np.sin(phis_true)
+
+    # print gamma
+    gammas = get_gamma(n_iter, n_bits)
+    print_verilog_array(gammas)
 
     phis = np.zeros(len(phis_true))
     for i in range(len(phis_true)):
