@@ -5,16 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge
-
-
-def float_to_fixed(x, n_bits=24):
-    """Converts a floating point number to a signed fixed point number with n_bits bits."""
-    return int(x * (2 ** (n_bits - 1)))
-
-
-def fixed_to_float(x, n_bits=24):
-    """Converts a signed fixed point number with n_bits bits to a floating point number."""
-    return x / (2 ** (n_bits - 1))
+from cordic_prototype import fixed_to_float, float_to_fixed
 
 
 @cocotb.test()  # pylint: disable=no-value-for-parameter
@@ -30,10 +21,10 @@ async def cordic_test(dut):
 
     for i, phi_true in enumerate(phis_true):
         # convert to fixed point
-        x = float_to_fixed(np.cos(phi_true), n_bits=23)
-        y = float_to_fixed(np.sin(phi_true), n_bits=23)
+        x = float_to_fixed(np.cos(phi_true), n_bits=24)
+        y = float_to_fixed(np.sin(phi_true), n_bits=24)
 
-        # print(f"phi_true = {phi_true}, x = {x}, y = {y}")
+        print(f"phi_true = {phi_true}, x = {x}, y = {y}")
 
         # synchronize with the clock
         await FallingEdge(dut.clk_i)
@@ -59,9 +50,10 @@ async def cordic_test(dut):
 
         # read the output
         phis_cordic[i] = dut.phi_o.value.signed_integer
-        # phis_cordic[i] = fixed_to_float(phi)
+        phis_cordic[i] = fixed_to_float(phis_cordic[i], n_bits=24)
 
     # plot
+    plt.plot(phis_true, phis_true)
     plt.plot(phis_true, phis_cordic)
     plt.xlabel("True phi")
     plt.ylabel("CORDIC phi")

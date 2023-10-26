@@ -4,13 +4,13 @@ module CordicFSMTest (
     input logic start_i,  // start the computation
     input logic signed [23:0] sin_i,  // sine
     input logic signed [23:0] cos_i,  // cosine
-    output logic signed [23:0] phi_o,  // phase
+    output logic signed [25:0] phi_o,  // phase
     output logic done_o  // computation is done, result is valid
 );
 
     logic signed [24:0] angle_table[24] = '{
-        6588397,
-        3889358,
+        6588396,
+        3889357,
         2055029,
         1043165,
         523606,
@@ -36,7 +36,8 @@ module CordicFSMTest (
     };
 
     CordicFSM #(
-        .BIT_WIDTH(24)
+        .BIT_WIDTH_IN(24),
+        .BIT_WIDTH_OUT(26)
     ) dut (
         .clk_i(clk_i),
         .start_i(start_i),
@@ -48,3 +49,18 @@ module CordicFSMTest (
         .done_o(done_o)
     );
 endmodule
+
+
+// module CordicFSM #(
+//     parameter int BIT_WIDTH_IN = 24,
+//     parameter int BIT_WIDTH_OUT = 26
+// ) (
+//     input logic clk_i,  // clock
+//     input logic reset_i,  // reset
+//     input logic start_i,  // start the computation
+//     input logic signed [BIT_WIDTH_IN-1:0] sin_i,  // sine
+//     input logic signed [BIT_WIDTH_IN-1:0] cos_i,  // cosine
+//     input logic signed [BIT_WIDTH_IN:0] angle_table[BIT_WIDTH_IN],  // angle table
+//     output logic signed [BIT_WIDTH_OUT-1:0] phi_o,  // phase
+//     output logic done_o  // computation is done, result is valid
+// );
