@@ -5,13 +5,17 @@ import numpy as np
 
 
 def float_to_fixed(x, n_bits=16):
-    """Converts a floating point number to a signed fixed point number with n_bits bits."""
-    return int(x * (2 ** (n_bits - 1)))
+    """Converts a floating point number to a signed fixed point number with n_bits bits.
+
+    The range [-1, 1] gets mapped to the range [-2^(n_bits-1)-1, 2^(n_bits-1)-1].
+    Note that the most negative signed integer gets mapped to slightly less than -1, because of the assymmetry inherent to standard signed integers.
+    """
+    return int(x * (2 ** (n_bits - 1) - 1))
 
 
 def fixed_to_float(x, n_bits=16):
     """Converts a signed fixed point number with n_bits bits to a floating point number."""
-    return x / (2 ** (n_bits - 1))
+    return x / (2 ** (n_bits - 1) - 1)
 
 
 def get_gamma(n_iter=16, n_bits=16):
@@ -39,15 +43,18 @@ def print_verilog_array(array):
     print("}")
 
 
+def get_range(n_bits):
+    """Returns the range of a signed fixed point number with n_bits bits."""
+    min_val = -(2 ** (n_bits - 1))
+    max_val = 2 ** (n_bits - 1) - 1
+    return min_val, max_val
+
+
 def cartesian_to_phi_cordic(x, y, n_iter=16):
     """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm."""
 
     n_bits = n_iter
     n_bits_extended = n_bits + 1  # to avoid overflow for internal variables
-
-    # define the maximum and minimum values for the fixed point variables
-    max_val = 2 ** (n_bits_extended - 1) - 1
-    min_val = -(2 ** (n_bits_extended - 1))
 
     # Initialize the CORDIC rotation table
     gammas = get_gamma(n_iter, n_bits)
@@ -55,6 +62,11 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
     # convert to fixed point
     x = float_to_fixed(x, n_bits)
     y = float_to_fixed(y, n_bits)
+
+    # assert starting values are in range
+    min_val, max_val = get_range(n_bits)
+    for var in [x, y]:
+        assert min_val <= var <= max_val
 
     # iterate the CORDIC algorithm
     phi = 0
@@ -72,6 +84,7 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
         phi += d * gammas[j]
 
         # assert all values are still in range
+        min_val, max_val = get_range(n_bits_extended)
         for var in [x, y, phi]:
             assert min_val <= var <= max_val
 
