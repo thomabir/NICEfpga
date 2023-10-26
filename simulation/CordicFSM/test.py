@@ -1,11 +1,10 @@
 """Tests for the CORDIC Finite State Machine, which recovers the phase phi given sin(phi) and cos(phi)."""
 
 import cocotb
-import matplotlib.pyplot as plt
 import numpy as np
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge
-from cordic_prototype import fixed_to_float, float_to_fixed
+from cordic_prototype import cartesian_to_phi_cordic, float_to_fixed
 
 
 @cocotb.test()  # pylint: disable=no-value-for-parameter
@@ -16,15 +15,16 @@ async def cordic_test(dut):
 
     # generate array of phis
     n_tests = 10
-    phis_true = np.linspace(-np.pi / 2, np.pi / 2, n_tests)
-    phis_cordic = np.zeros(n_tests)
+    phis_true_float = np.linspace(-np.pi / 2, np.pi / 2, n_tests)
+    phis_cordic_python = np.zeros(n_tests)
+    phis_cordic_sv = np.zeros(n_tests)
 
-    for i, phi_true in enumerate(phis_true):
+    for i, phi_true_float in enumerate(phis_true_float):
         # convert to fixed point
-        x = float_to_fixed(np.cos(phi_true), n_bits=24)
-        y = float_to_fixed(np.sin(phi_true), n_bits=24)
+        x = float_to_fixed(np.cos(phi_true_float), n_bits=24)
+        y = float_to_fixed(np.sin(phi_true_float), n_bits=24)
 
-        print(f"phi_true = {phi_true}, x = {x}, y = {y}")
+        print(f"phi_true = {phi_true_float}, x = {x}, y = {y}")
 
         # synchronize with the clock
         await FallingEdge(dut.clk_i)
@@ -49,12 +49,10 @@ async def cordic_test(dut):
             await FallingEdge(dut.clk_i)
 
         # read the output
-        phis_cordic[i] = dut.phi_o.value.signed_integer
-        phis_cordic[i] = fixed_to_float(phis_cordic[i], n_bits=24)
+        phis_cordic_sv[i] = dut.phi_o.value.signed_integer
 
-    # plot
-    plt.plot(phis_true, phis_true)
-    plt.plot(phis_true, phis_cordic)
-    plt.xlabel("True phi")
-    plt.ylabel("CORDIC phi")
-    plt.show()
+        # get the output from the Python implementation
+        phis_cordic_python[i] = cartesian_to_phi_cordic(x, y, n_iter=24)
+
+        # check they are equal
+        assert phis_cordic_sv[i] == phis_cordic_python[i]
