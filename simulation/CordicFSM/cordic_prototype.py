@@ -25,12 +25,17 @@ def get_gamma(n_iter=16, n_bits=16):
 
     return gamma
 
-def print_verilog_array(array):
 
-    # print in this format: {10, 3, ...}
+def print_verilog_array(array):
+    """Prints an array in Verilog format, e.g. {10, 3, 2}"""
+
     print("{", end="")
-    for i in range(len(array)):
-        print(f"{array[i]}, ", end="")
+    for i, element in enumerate(array):
+        print(f"{element}", end="")
+
+        # unless it's the last element, print ", "
+        if i != len(array) - 1:
+            print(", ", end="")
     print("}")
 
 
