@@ -54,18 +54,27 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
     """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm."""
 
     n_bits = n_iter
-    n_bits_extended = n_bits + 1  # to avoid overflow for internal variables
+    n_bits_extended = n_bits + 3  # to avoid overflow for internal variables
 
     # Initialize the CORDIC rotation table
     gammas = get_gamma(n_iter, n_bits)
+
+    # get pi in fixed point
+    pi_fixed = float_to_fixed(np.pi, n_bits)
 
     # assert starting values are in range
     min_val, max_val = get_range(n_bits)
     for var in [x, y]:
         assert min_val <= var <= max_val
 
-    # iterate the CORDIC algorithm
     phi = 0
+
+    # if (x,y) is on the left half-plane, flip it to the right half-plane, and keep track of the total rotation angle
+    if x < 0:
+        x, y = -x, -y
+        phi = pi_fixed
+
+    # iterate the CORDIC algorithm
     for j in range(n_iter):
         # decide whether to rotate clockwise or counterclockwise
         if y >= 0:
@@ -93,7 +102,7 @@ def main():
     n_iter = 24
     n_bits = 24
 
-    phis_true = np.linspace(-np.pi / 2, np.pi / 2, 100)
+    phis_true = np.linspace(-np.pi / 2, np.pi * 3 / 2 - 1e-5, 100)
     xs = np.cos(phis_true)
     ys = np.sin(phis_true)
 
