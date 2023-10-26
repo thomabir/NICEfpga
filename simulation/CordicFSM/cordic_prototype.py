@@ -59,10 +59,6 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
     # Initialize the CORDIC rotation table
     gammas = get_gamma(n_iter, n_bits)
 
-    # convert to fixed point
-    x = float_to_fixed(x, n_bits)
-    y = float_to_fixed(y, n_bits)
-
     # assert starting values are in range
     min_val, max_val = get_range(n_bits)
     for var in [x, y]:
@@ -88,9 +84,6 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
         for var in [x, y, phi]:
             assert min_val <= var <= max_val
 
-    # Convert back to floating point
-    phi = fixed_to_float(phi, n_bits)
-
     return phi
 
 
@@ -110,7 +103,10 @@ def main():
 
     phis = np.zeros(len(phis_true))
     for i in range(len(phis_true)):
-        phis[i] = cartesian_to_phi_cordic(xs[i], ys[i], n_iter)
+        x = float_to_fixed(xs[i], n_bits)
+        y = float_to_fixed(ys[i], n_bits)
+        phis[i] = cartesian_to_phi_cordic(x, y, n_iter)
+        phis[i] = fixed_to_float(phis[i], n_bits)
 
     # plot with residuals underneath
     _, axs = plt.subplots(2, 1, sharex=True)
