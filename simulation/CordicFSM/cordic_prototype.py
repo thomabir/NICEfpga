@@ -50,7 +50,7 @@ def get_range(n_bits):
     return min_val, max_val
 
 
-def cartesian_to_phi_cordic(x, y, n_iter=16):
+def cartesian_to_phi_cordic(x, y, n_iter=16, pi_fixed=26353586):
     """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm."""
 
     n_bits = n_iter
@@ -110,11 +110,15 @@ def main():
     gammas = get_gamma(n_iter, n_bits)
     print_verilog_array(gammas)
 
+    # print PI
+    pi_fixed = float_to_fixed(np.pi, n_bits)
+    print(f"pi_fixed = {pi_fixed}")
+
     phis = np.zeros(len(phis_true))
     for i in range(len(phis_true)):
         x = float_to_fixed(xs[i], n_bits)
         y = float_to_fixed(ys[i], n_bits)
-        phis[i] = cartesian_to_phi_cordic(x, y, n_iter)
+        phis[i] = cartesian_to_phi_cordic(x, y, n_iter, pi_fixed)
         phis[i] = fixed_to_float(phis[i], n_bits)
 
     # plot with residuals underneath
