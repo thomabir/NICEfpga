@@ -1,13 +1,14 @@
 module CordicFSM #(
     parameter int BIT_WIDTH_IN = 24,
-    parameter int BIT_WIDTH_OUT = 26
+    parameter int BIT_WIDTH_OUT = 26,
+    parameter int PI = 26353586
 ) (
     input logic clk_i,  // clock
     input logic reset_i,  // reset
     input logic start_i,  // start the computation
     input logic signed [BIT_WIDTH_IN-1:0] sin_i,  // sine
     input logic signed [BIT_WIDTH_IN-1:0] cos_i,  // cosine
-    input logic signed [BIT_WIDTH_IN:0] angle_table[BIT_WIDTH_IN],  // angle table
+    input logic signed [BIT_WIDTH_IN-1:0] angle_table[BIT_WIDTH_IN],  // angle table
     output logic signed [BIT_WIDTH_OUT-1:0] phi_o,  // phase
     output logic done_o  // computation is done, result is valid
 );
@@ -18,6 +19,7 @@ module CordicFSM #(
 
     typedef enum logic [2:0] {
         IDLE,  // wait for start_i, all outputs are zero
+        FLIP,  // flip (x,y) to the right half-plane, add PI to phi
         ITERATE,  // iterate the CORDIC algorithm for BIT_WIDTH_IN iterations
         DONE  // phi_o is valid, done_o is high, go back to IDLE
     } state_e;
@@ -52,7 +54,17 @@ module CordicFSM #(
                 state_d.x = (BIT_WIDTH_IN + 1)'(sin_i);
                 state_d.y = (BIT_WIDTH_IN + 1)'(cos_i);
                 state_d.phi = 0;
-                if (start_i) state_d.state = ITERATE;
+                if (start_i) state_d.state = FLIP;
+            end
+
+            // if x < 0, flip x and y, and initialise phi as PI
+            FLIP: begin
+                if (state_q.x < 0) begin
+                    state_d.x = -state_q.x;
+                    state_d.y = -state_q.y;
+                    state_d.phi = BIT_WIDTH_OUT'(PI);
+                end
+                state_d.state = ITERATE;
             end
 
             ITERATE: begin
@@ -66,12 +78,12 @@ module CordicFSM #(
                     if (state_q.y >= 0) begin
                         state_d.x = state_q.x + (state_q.y >>> state_q.i);
                         state_d.y = state_q.y - (state_q.x >>> state_q.i);
-                        state_d.phi = state_q.phi + angle_table[state_q.i];
+                        state_d.phi = state_q.phi + BIT_WIDTH_OUT'(angle_table[state_q.i]);
                     end
                     else begin
                         state_d.x = state_q.x - (state_q.y >>> state_q.i);
                         state_d.y = state_q.y + (state_q.x >>> state_q.i);
-                        state_d.phi = state_q.phi - angle_table[state_q.i];
+                        state_d.phi = state_q.phi - BIT_WIDTH_OUT'(angle_table[state_q.i]);
                     end
                     state_d.i = state_q.i + 1;
                 end

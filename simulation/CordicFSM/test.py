@@ -15,7 +15,7 @@ async def cordic_test(dut):
 
     # generate array of phis
     n_tests = 10
-    phis_true_float = np.linspace(-np.pi / 2, np.pi / 2, n_tests)
+    phis_true_float = np.linspace(-np.pi / 2, 3 * np.pi / 2 - 0.001, n_tests)
     phis_cordic_python = np.zeros(n_tests)
     phis_cordic_sv = np.zeros(n_tests)
 
@@ -56,3 +56,13 @@ async def cordic_test(dut):
 
         # check they are equal
         assert phis_cordic_sv[i] == phis_cordic_python[i]
+
+    # plot
+    # import matplotlib.pyplot as plt
+
+    # plt.plot(phis_true_float, phis_cordic_sv, label="CORDIC SV")
+    # plt.plot(phis_true_float, phis_cordic_python, label="CORDIC Python")
+    # plt.xlabel("True phi")
+    # plt.ylabel("Recovered phi")
+    # plt.legend()
+    # plt.show()
