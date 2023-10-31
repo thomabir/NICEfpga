@@ -72,8 +72,15 @@ plt.show()
 print(num, denom)
 
 # scale coefficients to 24 bit ints
-num = float_to_fixed_arr(num, 21)
-denom = float_to_fixed_arr(denom, 21)
+num_total_bits = 18
+num_int_bits = 3
+num_frac_bits = num_total_bits - num_int_bits
+num = float_to_fixed_arr(num, num_frac_bits)
+denom = float_to_fixed_arr(denom, num_frac_bits)
+
+# make sure all coefficients are within num_total_bits range
+assert max(max(num), max(denom)) < 2 ** (num_total_bits - 1) - 1
+assert min(min(num), min(denom)) > -2 ** (num_total_bits - 1)
 
 # print a, b
 print("denominator = ", end="")
