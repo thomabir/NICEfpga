@@ -66,7 +66,7 @@ ax2.set_xlabel("Frequency (Hz)")
 # ax2.set_xlim([0, 1000])
 ax2.grid()
 
-# plt.show()
+plt.show()
 # exit()
 
 print(num, denom)
