@@ -28,21 +28,22 @@ module IIRFilter #(
     logic [CoeffLengthBits-1:0] count;  // counter for the state machine
     logic signed [AccumulatorBits-1:0] acc;  // accumulator for the filter
 
-    // State machine signals
+    // // State machine signals
     localparam logic IDLE = 0;
     localparam logic RUN = 1;
 
     logic state;
 
+
     always @(posedge clk_i) begin : capture
         integer i;
         if (start_i) begin
+            data_i[0] <= signal_i;
+            data_o[0] <= signal_o;
             for (i = 0; i < COEFF_LENGTH - 1; i = i + 1) begin
                 data_i[i+1] <= data_i[i];
                 data_o[i+1] <= data_o[i];
             end
-            data_i[0] <= signal_i;
-            data_o[0] <= signal_o;
         end
     end
     always @(posedge clk_i) begin
@@ -74,12 +75,13 @@ module IIRFilter #(
     always @(posedge clk_i) begin
         if (done_o) begin
             // Saturate if necessary
-            if (acc >= 2 ** (2 * SIGNAL_BITS - 2)) begin
-                signal_o <= 2 ** (SIGNAL_BITS - 1) - 1;
+            if (acc >= 2 ** (SIGNAL_BITS+COEFF_FRAC_BITS-1) - 1) begin
+                signal_o <= 2 ** (SIGNAL_BITS-1) - 1;
             end
-            else if (acc < -(2 ** (2 * SIGNAL_BITS - 2))) begin
-                signal_o <= -(2 ** (SIGNAL_BITS - 1));
+            else if (acc < -(2 ** (SIGNAL_BITS+COEFF_FRAC_BITS-1))) begin
+                signal_o <= -(2 ** (SIGNAL_BITS-1));
             end
+            
             else begin
                 signal_o <= acc[COEFF_FRAC_BITS+SIGNAL_BITS-1:COEFF_FRAC_BITS];
             end

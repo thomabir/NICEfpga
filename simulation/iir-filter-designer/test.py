@@ -30,21 +30,23 @@ def white_noise(num_samples, dc=0, std=1):
 @cocotb.test()  # pylint: disable=E1120
 async def test_white(dut):
     """Test the filter with white noise."""
-    clock = Clock(dut.clk_i, 10, units="ns")  # 100 MHz clock
+    clock = Clock(dut.clk_i, 1000, units="ns")  # 100 MHz clock
 
-    n_steps = 300
+    n_steps = 100
     fs = 64e3  # sampling rate, Hz
     dt = 1 / fs  # sampling interval, s
     dt_ns = dt * 1e9  # sampling interval, ns
     dt_ns_approx = np.round(dt_ns / 10) * 10  # sampling interval, rounded to nearest 10 ns, ns
     t = np.arange(n_steps) * dt
 
-    offset = 0.5
+    # offset = 0.5
     # signal_i = 0.2 * np.sin(2 * np.pi * 10e3 * t) + offset
-    signal_i = white_noise(n_steps, dc=offset, std=0.1)
-    signal_i_int = np.round(signal_i * 2**23)
+    # signal_i = white_noise(n_steps, dc=offset, std=0.1)
+    signal_i = np.ones(n_steps) / 10
+    signal_i[0:20] = 0
+    signal_i_int = np.round(signal_i * (2**23 - 1))
 
-    signal_o = np.zeros(n_steps)
+    signal_o_int = np.zeros(n_steps)
     cocotb.start_soon(clock.start())
     await FallingEdge(dut.clk_i)  # Synchronize with the clock
 
@@ -54,10 +56,15 @@ async def test_white(dut):
     # dut.reset_i.value = 0
     await FallingEdge(dut.clk_i)
 
+    # simple example
+    # n_steps = 8
+    # signal_i_int = np.array([0, 1, 2, 3, 4, 5, 6, 7])
+
+
     for i in range(n_steps):
         dut.signal_i.value = int(signal_i_int[i])
         dut.start_i.value = 1
-        signal_o[i] = dut.signal_o.value
+        signal_o_int[i] = dut.signal_o.value
 
         await FallingEdge(dut.clk_i)
         dut.start_i.value = 0
@@ -65,19 +72,23 @@ async def test_white(dut):
         await Timer(dt_ns_approx, units="ns")
         await FallingEdge(dut.clk_i)
 
+
+
+
     # decode the output
-    signal_o = twos_complement_to_float(signal_o, 24)
+    signal_o = twos_complement_to_float(signal_o_int, 24)
 
     # ignore the beginning when the filter is settling
-    idx = t > 1e-3
-    signal_i = signal_i[idx]
-    signal_o = signal_o[idx]
-    t = t[idx]
+    # idx = t > 1e-3
+    # signal_i = signal_i[idx]
+    # signal_o = signal_o[idx]
+    # t = t[idx]
 
     # check the output
-    plt.plot(t, signal_i)
-    plt.plot(t, signal_o)
+    plt.plot(t, signal_i_int)
+    plt.plot(t, signal_o_int)
     plt.show()
+
 
     # fourier transform of signals
     signal_i_F = fft.fft(signal_i)
