@@ -8,11 +8,20 @@ module DoutReader (
     // ADC pins
     input drdy,  // /DRDY
     input dclk,  // DCLK
-    input din,  // DIN
+    input din0,  // DOUT0
+    input din1,  // DOUT1
+    input din2,  // DOUT2
+    input din3,  // DOUT3
 
     // ADC readings, in twos' complement
     output [23:0] ch1_o,  // channel 1
     output [23:0] ch2_o,  // channel 2
+    output [23:0] ch3_o,  // channel 3
+    output [23:0] ch4_o,  // channel 4
+    output [23:0] ch5_o,  // channel 5
+    output [23:0] ch6_o,  // channel 6
+    output [23:0] ch7_o,  // channel 7
+    output [23:0] ch8_o,  // channel 8
 
     output tick_o  // tick whenever chx_o is updated
 );
@@ -31,8 +40,14 @@ module DoutReader (
         logic drdy_2;  // /DRDY, two clk_i cycles ago
         logic dclk_1;  // DCLK, one clk_i cycle ago
         logic dclk_2;  // DCLK, two clk_i cycles ago
-        logic [63:0] in_data;  // message read from the ADC
-        logic [63:0] final_data;
+        logic [63:0] in_data0;  // message read from the ADC
+        logic [63:0] in_data1;  // message read from the ADC
+        logic [63:0] in_data2;  // message read from the ADC
+        logic [63:0] in_data3;  // message read from the ADC
+        logic [63:0] final_data0;
+        logic [63:0] final_data1;
+        logic [63:0] final_data2;
+        logic [63:0] final_data3;
         logic tick;  // tick whenever final_data is updated
     } state_t;
 
@@ -43,8 +58,14 @@ module DoutReader (
         if (reset_i) begin
             state_q.state <= WAIT_DRDY;
             state_q.i <= 63;
-            state_q.in_data <= 0;
-            state_q.final_data <= 0;
+            state_q.in_data0 <= 0;
+            state_q.in_data1 <= 0;
+            state_q.in_data2 <= 0;
+            state_q.in_data3 <= 0;
+            state_q.final_data0 <= 0;
+            state_q.final_data1 <= 0;
+            state_q.final_data2 <= 0;
+            state_q.final_data3 <= 0;
             state_q.drdy_1 <= 0;
             state_q.drdy_2 <= 0;
             state_q.dclk_1 <= 0;
@@ -69,7 +90,10 @@ module DoutReader (
             WAIT_DRDY: begin
                 // reset values
                 state_d.i = 63;
-                state_d.in_data = 0;
+                state_d.in_data0 = 0;
+                state_d.in_data1 = 0;
+                state_d.in_data2 = 0;
+                state_d.in_data3 = 0;
                 state_d.tick = 0;
 
                 // if DRDY goes low, go to next state
@@ -89,7 +113,10 @@ module DoutReader (
 
             // write din into the ith bit of in_data
             WRITE_DATA: begin
-                state_d.in_data[state_q.i] = din;
+                state_d.in_data0[state_q.i] = din0;
+                state_d.in_data1[state_q.i] = din1;
+                state_d.in_data2[state_q.i] = din2;
+                state_d.in_data3[state_q.i] = din3;
                 state_d.i = state_q.i - 1;
 
                 // if all bits have been written, go to next state
@@ -103,7 +130,10 @@ module DoutReader (
 
             // split up in_data into ch1_o and ch2_o
             FINALISE_DATA: begin
-                state_d.final_data = state_q.in_data;
+                state_d.final_data0 = state_q.in_data0;
+                state_d.final_data1 = state_q.in_data1;
+                state_d.final_data2 = state_q.in_data2;
+                state_d.final_data3 = state_q.in_data3;
                 state_d.state = WAIT_DRDY;
                 state_d.tick = 1;
             end
@@ -119,8 +149,14 @@ module DoutReader (
 
 
     // output signals
-    assign ch1_o = state_q.final_data[55:32];
-    assign ch2_o = state_q.final_data[23:0];
+    assign ch1_o = state_q.final_data0[55:32];
+    assign ch2_o = state_q.final_data0[23:0];
+    assign ch3_o = state_q.final_data1[55:32];
+    assign ch4_o = state_q.final_data1[23:0];
+    assign ch5_o = state_q.final_data2[55:32];
+    assign ch6_o = state_q.final_data2[23:0];
+    assign ch7_o = state_q.final_data3[55:32];
+    assign ch8_o = state_q.final_data3[23:0];
     assign tick_o = state_q.tick;
 
 endmodule
