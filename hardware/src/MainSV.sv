@@ -17,6 +17,14 @@ module MainSV (
     // ADC reader
     logic signed [23:0] adc1_o;
     logic signed [23:0] adc2_o;
+    logic signed [23:0] adc3_o;
+    logic signed [23:0] adc4_o;
+    logic signed [23:0] adc5_o;
+    logic signed [23:0] adc6_o;
+    logic signed [23:0] adc7_o;
+    logic signed [23:0] adc8_o;
+
+
     logic adc_tick_o;
 
     DoutReader reader (
@@ -24,16 +32,27 @@ module MainSV (
         .reset_i(reset),
         .drdy(pmodb_i[0]),
         .dclk(pmodb_i[1]),
-        .din(pmodb_i[2]),
-        .ch1_o(adc1_o),
-        .ch2_o(adc2_o),
+        .din0(pmodb_i[2]),
+        .din1(pmodb_i[3]),
+        .din2(pmodb_i[4]),
+        .din3(pmodb_i[5]),
+        .ch1_o(adc1_o), // QPD1
+        .ch2_o(adc2_o), // QPD2
+        .ch3_o(adc3_o), // sin
+        .ch4_o(adc4_o), // cos
+        .ch5_o(adc5_o), // NC
+        .ch6_o(adc6_o), // NC
+        .ch7_o(adc7_o), // NC
+        .ch8_o(adc8_o), // NC
         .tick_o(adc_tick_o)
     );
 
 
     // input filters
-    logic signed [23:0] ifilt1_o;
-    logic signed [23:0] ifilt2_o;
+    logic signed [23:0] ifilt1_o; // QPD1
+    logic signed [23:0] ifilt2_o; // QPD2
+    logic signed [23:0] ifilt3_o; // sin
+    logic signed [23:0] ifilt4_o; // cos
     logic tick_ifilt_o;
 
     InputFilter ifilt1 (
@@ -54,37 +73,68 @@ module MainSV (
         .tick_o ()
     );
 
+    InputFilter ifilt3 (
+        .clk_i  (clk),
+        .reset_i(reset),
+        .tick_i (adc_tick_o),
+        .data_i (adc3_o),
+        .data_o (ifilt3_o),
+        .tick_o ()
+    );
+
+    InputFilter ifilt4 (
+        .clk_i  (clk),
+        .reset_i(reset),
+        .tick_i (adc_tick_o),
+        .data_i (adc4_o),
+        .data_o (ifilt4_o),
+        .tick_o ()
+    );
+
+    // current to position
+    logic signed [24:0] sum;
+    logic signed [24:0] diff;
+
+    assign sum  = ifilt1_o + ifilt2_o; // TODO deal with overflow
+    assign diff = ifilt1_o - ifilt2_o; // TODO deal with overflow
+
 
     // lock-in amplifier
-    logic signed [23:0] x;
-    logic signed [23:0] y;
-    logic lockin_done_o;
+    logic signed [23:0] x1;
+    logic signed [23:0] x2;
+    logic signed [23:0] i1;
+    logic signed [23:0] i2;
+    logic demod_done_o;
 
-    LockInAmplifier lockin (
+    QpdDemodulator demod (
         .clk_i(clk),
         .reset_i(reset),
         .tick_i(tick_ifilt_o),
-        .ch1_i(ifilt1_o),
-        .ch2_i(ifilt2_o),
-        .x_o(x),
-        .y_o(y),
-        .done_o(lockin_done_o)
+        .diff_i(diff[24:1]),
+        .sum_i(sum[24:1]),
+        .sin_i(ifilt3_o),
+        .cos_i(ifilt4_o),
+        .x1_o(x1),
+        .y2_o(x2),
+        .i1_o(i1),
+        .i2_o(i2),
+        .done_o(demod_done_o)
     );
 
 
-    // A counter that increases by 1 every time the lock-in amplifier is updated
+    // A counter that increases by 1 every time the demodulator is updated
     logic unsigned [31:0] counter;
     always_ff @(posedge clk) begin
         if (reset) begin
             counter <= 0;
         end
-        else if (lockin_done_o) begin
+        else if (demod_done_o) begin
             counter <= counter + 1;
         end
     end
 
 
-    assign oreg1 = x;
-    assign oreg2 = y;
+    assign oreg1 = x1;
+    assign oreg2 = x2;
     assign oreg3 = counter;
 endmodule
