@@ -95,8 +95,8 @@ module MainSV (
     logic signed [24:0] sum;
     logic signed [24:0] diff;
 
-    assign sum  = ifilt1_o + ifilt2_o; // TODO deal with overflow
-    assign diff = ifilt1_o - ifilt2_o; // TODO deal with overflow
+    assign sum  = - (ifilt1_o + ifilt2_o); // prefactor -1 to undo pi phase shift from inverting transimpedance amplifier
+    assign diff = - (ifilt1_o - ifilt2_o); // prefactor -1
 
 
     // lock-in amplifier
