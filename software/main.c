@@ -61,146 +61,8 @@ void print_app_header() {
   xil_printf("UDP packets sent to port 7 will be processed\n\r");
 }
 
-void SPITransfer(XSpiPs *SpiInstancePtr, u16 SendMsg, u16 *RecvBufPtr) {
-
-  u8 *SendBufPtr_u8[2];
-  u8 *RecvBufPtr_u8[2];
-
-  // set elements of u8 arrays
-  SendBufPtr_u8[0] = (SendMsg >> 8) & 0xFF;
-  SendBufPtr_u8[1] = SendMsg & 0xFF;
-
-  u32 ByteCount = 2;
-  s32 Status;
-
-  // transfer data
-  Status = XSpiPs_Transfer(SpiInstancePtr, SendBufPtr_u8, RecvBufPtr_u8, ByteCount);
-
-  if (Status != XST_SUCCESS) {
-    xil_printf("SPI transfer failed\r\n");
-  }
-
-  // wait 10 us
-  usleep(10);
-
-  // populate RecvBufPtr
-//  *RecvBufPtr = RecvBufPtr_u8[0] << 8 | RecvBufPtr_u8[1];
-
-
-
-  // abort transfer
-  XSpiPs_Abort(SpiInstancePtr);
-}
-
-void SPITransferByte(XSpiPs *SpiInstancePtr, u8 SendMsg, u8 *RecvBufPtr) {
-
-
-  u32 ByteCount = 1;
-  s32 Status;
-
-  u8 *messg_p;
-  messg_p = &SendMsg;
-
-  // transfer data
-  Status = XSpiPs_Transfer(SpiInstancePtr, messg_p, RecvBufPtr, ByteCount);
-
-  if (Status != XST_SUCCESS) {
-    xil_printf("SPI transfer failed\r\n");
-  }
-
-  // wait 10 us
-  // messages appear to be sent in random order if I use only 1 us
-  usleep(10);
-
-  // abort transfer
-  XSpiPs_Abort(SpiInstancePtr);
-}
 
 int main() {
-
-  // prepare data
-//   u16 SendBufPtr[2] = {0x6110, 0x6401};//, 0x6400};
-//   u16 RecvBufPtr[2] = {0x0001, 0x0002};//, 0x0003};
-//   u32 ByteCount = 2;
-//   u32 Status;
-//
-//  // cast sendbufptr and recvbufptr to u8
-//   u8 *SendBufPtr_u8 = (u8 *)SendBufPtr;
-//   u8 *RecvBufPtr_u8 = (u8 *)RecvBufPtr;
-
-  // setup SPI
-//  xil_printf("SPI test\r\n");
-//  XSpiPs spi0;
-//  XSpiPs_Config *SpiConfig;
-//  SpiConfig = XSpiPs_LookupConfig(XPAR_XSPIPS_0_DEVICE_ID);
-//  int statuss;
-//	if (NULL == SpiConfig) {
-//		xil_printf("Lookup failed\r\n");
-//	}
-//
-//	statuss = XSpiPs_CfgInitialize(&spi0, SpiConfig, SpiConfig->BaseAddress);
-//  if (statuss != XST_SUCCESS) {
-//    xil_printf("Initialization failed\r\n");
-//  }
-//
-//  statuss = XSpiPs_SelfTest(&spi0);
-//	if (statuss != XST_SUCCESS) {
-//		return XST_FAILURE;
-//	}
-//
-//
-//  XSpiPs_Enable(&spi0);
-//
-//
-//  XSpiPs_SetOptions(&spi0, XSPIPS_MASTER_OPTION); // set options: master mode
-//
-//
-//  XSpiPs_SetClkPrescaler(&spi0, XSPIPS_CLK_PRESCALE_64); // set prescaler (sclk = 166 MHz / 64 = 2.6 MHz)
-//
-//
-//
-//  u8 RecvBufPtr = {0x00};
-//  u16 *RecvBufPtr16;
-
-
-
-//  s32 Status;
-
-
-
-//  XSpiPs_SetSlaveSelect(&spi0, 0x00); // select slave 00
-
-
-
-//  u16 RecvBufPtr[1] = {0x0000}; // initialise receive buffer
-
-//  while (1) {
-
-//	  SPITransferByte(&spi0, 0x61, RecvBufPtr);
-//	  SPITransferByte(&spi0, 0x10, RecvBufPtr);
-//	  SPITransferByte(&spi0, 0x64, RecvBufPtr);
-//	  SPITransferByte(&spi0, 0x01, RecvBufPtr);
-//
-//
-//
-//
-//	  PITransfer(&spi0, 0x6110, RecvBufPtr16);
-
-
-
-//    xil_printf("Received: %x\r\n", RecvBufPtr16);
-
-
-//    usleep(5000000);
-//  }
-
-
-
-
-
-
-
-
 
 
   struct ip4_addr ipaddr, netmask, gw /*, Remotenetmask, Remotegw*/;
@@ -257,24 +119,32 @@ int main() {
   int pkg_no = 0;
   int vals_idx = 0;
 
-  XGpio xgpio_in1, xgpio_in2, xgpio_in3;
+  XGpio xgpio_in0, xgpio_in1, xgpio_in2, xgpio_in3, xgpio_in4;
 
-  int32_t x_int, y_int, phase_int, counter, prev_counter;
-  double x_d, y_d, phase_d, prev_phase_d;
-  int payload[20]; // 10 x (counter , measurement) = 20 ints
+  xil_printf("Initializing payload container\n\r");
+  int payload_size = 10 * 5; // 10 packages of 5 ints
+  int payload[payload_size];
 
-  XGpio_Initialize(&xgpio_in1, XPAR_AXI_GPIO_0_DEVICE_ID);
+  xil_printf("Initializing GPIO\n\r");
+  XGpio_Initialize(&xgpio_in0, XPAR_AXI_GPIO_0_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in0, 1, 1);
+
+  XGpio_Initialize(&xgpio_in1, XPAR_AXI_GPIO_1_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in1, 1, 1);
 
-  XGpio_Initialize(&xgpio_in2, XPAR_AXI_GPIO_1_DEVICE_ID);
+  XGpio_Initialize(&xgpio_in2, XPAR_AXI_GPIO_2_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in2, 1, 1);
 
-  XGpio_Initialize(&xgpio_in3, XPAR_AXI_GPIO_2_DEVICE_ID);
+  XGpio_Initialize(&xgpio_in3, XPAR_AXI_GPIO_3_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in3, 1, 1);
+
+  XGpio_Initialize(&xgpio_in4, XPAR_AXI_GPIO_4_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in4, 1, 1);
 
   /* receive and process packets */
 
   // chatgpt suggestion:
+  xil_printf("Performing pcb stuff\n\r");
   err_t err;
   struct udp_pcb *pcb;
 
@@ -294,50 +164,62 @@ int main() {
   }
 
   /* Set the remote IP address and port */
+  xil_printf("Setting remote IP address and port\n\r");
   ip4_addr_set_u32(&pcb->remote_ip, RemoteAddr.addr);
   pcb->remote_port = htons(RemotePort);
 
   /* Save the PCB to the global variable */
   send_pcb = *pcb;
 
-  prev_phase_d = 0;
+  int32_t counter, prev_counter;
+  int32_t adc1_int, adc2_int, adc3_int, adc4_int;
+  double adc1, adc2, adc3, adc4;
 
+  prev_counter = 0;
 
-
+  xil_printf("Starting loop\n\r");
 
   while (1) {
-    // Get the current value via xgpio
-    x_int = XGpio_DiscreteRead(&xgpio_in1, 1);
-    y_int = XGpio_DiscreteRead(&xgpio_in2, 1);
-    counter = XGpio_DiscreteRead(&xgpio_in3, 1);
+    // Get the current value of the counter
+    counter = XGpio_DiscreteRead(&xgpio_in0, 1);
 
     // if the counter is exactly 1 higher than the previous counter, we have a new value, and we perform the processing.
     // Otherwise, wait 10 us and try again
     // TODO use interrupts for this
     if (counter == prev_counter + 1) {
 
-      // cast x and y to doubles
-      x_d = (double)x_int;
-      y_d = (double)y_int;
+      adc1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
+      adc2_int = XGpio_DiscreteRead(&xgpio_in2, 1);
+      adc3_int = XGpio_DiscreteRead(&xgpio_in3, 1);
+      adc4_int = XGpio_DiscreteRead(&xgpio_in4, 1);
 
-      // calculate the phase using atan2
-      phase_d = -atan2(y_d, x_d);
 
-      // convert from rad to deg
-      phase_d = phase_d * 180. / PI;
+      // cast to doubles
+      // adc1 = (double)adc1_int;
+      // adc2 = (double)adc2_int;
+      // adc3 = (double)adc3_int;
 
-      // unwrap the phase
-      if (phase_d < prev_phase_d - 180) {
-        phase_d += 360;
-      } else if (phase_d > prev_phase_d + 180) {
-        phase_d -= 360;
-      }
+      // // calculate the phase using atan2
+      // phase_d = -atan2(y_d, x_d);
+
+      // // convert from rad to deg
+      // phase_d = phase_d * 180. / PI;
+
+      // // unwrap the phase
+      // if (phase_d < prev_phase_d - 180) {
+      //   phase_d += 360;
+      // } else if (phase_d > prev_phase_d + 180) {
+      //   phase_d -= 360;
+      // }
 
       // set the previous phase to the current phase
-      prev_phase_d = phase_d;
+      // prev_phase_d = phase_d;
 
       // convert the phase to a fixed point number, with 3 decimal places
-      phase_int = (int32_t)(phase_d * 1000);
+      // phase_int = (int32_t)(phase_d * 1000);
+
+      // print adc1_int
+      // printf("%d\n\r", adc1_int);
 
       // print using printf
       // printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
@@ -346,8 +228,15 @@ int main() {
       // printf("%d\n\r", phase_int);
 
       // store counter and phase_int in payload
-      payload[2 * vals_idx] = counter;
-      payload[2 * vals_idx + 1] = phase_int;
+      // payload[2 * vals_idx] = counter;
+      // payload[2 * vals_idx + 1] = phase_int;
+
+      // store counter and adc readings in payload
+      payload[5 * vals_idx] = counter;
+      payload[5 * vals_idx + 1] = adc1_int;
+      payload[5 * vals_idx + 2] = adc2_int;
+      payload[5 * vals_idx + 3] = adc3_int;
+      payload[5 * vals_idx + 4] = adc4_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
@@ -359,7 +248,7 @@ int main() {
         // xil_printf("Package %d\n\r", pkg_no);
 
         // set the payload to the phases array
-        psnd = pbuf_alloc(PBUF_TRANSPORT, 20 * sizeof(int), PBUF_REF);
+        psnd = pbuf_alloc(PBUF_TRANSPORT, payload_size * sizeof(int), PBUF_REF);
         psnd->payload = &payload;
 
         // send the package
