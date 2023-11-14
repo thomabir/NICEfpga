@@ -29,7 +29,7 @@ To listen to the UART output of the Zynq, use
 screen /dev/ttyUSB1 115200
 ```
 
-where `/dev/ttyUSB1` is the UART device, and `115200` is the baud rate. Sometimes, I have to switch the USB port to which the UART is connected to get this to work.
+where `/dev/ttyUSB1` is the UART device, and `115200` is the baud rate. Sometimes, I have to switch the USB port to which the UART is connected to get this to work. If you get `screen is terminating`, try  the command with `sudo`.
 
 ## Acknowledgements
 
