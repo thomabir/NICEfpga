@@ -36,25 +36,25 @@ def float_to_fixed_arr(arr, n_bits=16):
 
 # Define the filter parameters
 fs = 64000  # Sampling frequency in Hz
-f0 = 4000  # Lower cutoff frequency in Hz
-f1 = 6000  # Upper cutoff frequency in Hz
+f0 = 500  # Lower cutoff frequency in Hz
+f1 = 2000  # Upper cutoff frequency in Hz
 order = 2  # Filter order
 
 # Design the Butterworth filter
 num, denom = signal.butter(order, [f0, f1], fs=fs, btype="band")
 
 # Plot the amplitude and phase response
-w, h = signal.freqz(num, denom, worN=2**8, fs=fs)
+w, h = signal.freqz(num, denom, worN=2**10, fs=fs)
 frequencies = w
 
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))
+
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
 fig.suptitle("IIR Bandpass Filter Response")
 
 # Plot the amplitude response
-ax1.plot(frequencies, abs(h), "b")
+ax1.semilogy(frequencies, abs(h), "b", label="Ideal")
 ax1.set_ylabel("Gain")
 ax1.set_xlabel("Frequency (Hz)")
-# ax1.set_xlim([0, 1000])
 ax1.grid()
 
 # Plot the time delay (from phase response)
@@ -63,16 +63,15 @@ delays = phases / (2 * np.pi * frequencies)
 ax2.plot(frequencies, delays * 1e3, "b")
 ax2.set_ylabel("Delay (ms)")
 ax2.set_xlabel("Frequency (Hz)")
-# ax2.set_xlim([0, 1000])
 ax2.grid()
 
-plt.show()
+# plt.show()
 # exit()
 
 print(num, denom)
 
 # scale coefficients to 24 bit ints
-num_total_bits = 18
+num_total_bits = 24
 num_int_bits = 3
 num_frac_bits = num_total_bits - num_int_bits
 num = float_to_fixed_arr(num, num_frac_bits)
@@ -88,3 +87,18 @@ print_verilog_array(denom)
 
 print("numerator = ", end="")
 print_verilog_array(num)
+
+# determine frequcny response of quantised filter
+w, h = signal.freqz(num, denom, worN=2**10, fs=fs)
+frequencies = w
+
+# Plot the amplitude response
+ax1.semilogy(frequencies, abs(h), "r", label="Quantised")
+ax1.legend()
+
+# Plot the time delay (from phase response)
+phases = np.unwrap(np.angle(h))
+delays = phases / (2 * np.pi * frequencies)
+ax2.plot(frequencies, delays * 1e3, "r")
+
+plt.show()
