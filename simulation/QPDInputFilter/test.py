@@ -1,4 +1,4 @@
-"""Testing template for a generic FIR filter."""
+"""Testing template for a generic compensated CIC filter."""
 import cocotb
 import matplotlib.pyplot as plt
 import numpy as np
@@ -30,9 +30,9 @@ def white_noise(num_samples, dc=0, std=1):
 @cocotb.test()  # pylint: disable=E1120
 async def test_white(dut):
     """Test the filter with white noise."""
-    clock = Clock(dut.clk_i, 100, units="ns")  # 10 MHz clock
+    clock = Clock(dut.clk_i, 1000, units="ns")  # 10 MHz clock
 
-    n_steps = 100
+    n_steps = 5000
     fs = 64e3  # sampling rate, Hz
     dt = 1 / fs  # sampling interval, s
     dt_ns = dt * 1e9  # sampling interval, ns
@@ -40,10 +40,10 @@ async def test_white(dut):
     t = np.arange(n_steps) * dt
 
     # offset = 0.5
-    # signal_i = 0.2 * np.sin(2 * np.pi * 10e3 * t) + offset
-    # signal_i = white_noise(n_steps, dc=offset, std=0.1)
-    signal_i = np.ones(n_steps) / 10
-    signal_i[0:20] = 0
+    # signal_i = 0.3 * np.sin(2 * np.pi * 50 * t)
+    signal_i = white_noise(n_steps, dc=0, std=0.1)
+    # signal_i = np.ones(n_steps) / 10
+    # signal_i[0:20] = 0
     signal_i_int = np.round(signal_i * (2**23 - 1))
 
     signal_o_int = np.zeros(n_steps)
@@ -84,8 +84,6 @@ async def test_white(dut):
     plt.plot(t, signal_i_int)
     plt.plot(t, signal_o_int)
     plt.show()
-
-    exit()
 
     # fourier transform of signals
     signal_i_F = fft.fft(signal_i)

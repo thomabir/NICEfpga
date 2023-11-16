@@ -40,7 +40,7 @@ module QpdDemodulator #(
         .signal_i(diff_cos[2*NUM_BITS-1:24]),
         .signal_o(x2_o),
         .tick_i(tick_i),
-        .done_o(done_o)
+        .done_o()
     );
 
     DemodLowPass lpf3 (
@@ -48,7 +48,7 @@ module QpdDemodulator #(
         .signal_i(sum_sin[2*NUM_BITS-1:24]),
         .signal_o(i1_o),
         .tick_i(tick_i),
-        .done_o(done_o)
+        .done_o()
     );
 
     DemodLowPass lpf4 (
@@ -56,7 +56,7 @@ module QpdDemodulator #(
         .signal_i(sum_cos[2*NUM_BITS-1:24]),
         .signal_o(i2_o),
         .tick_i(tick_i),
-        .done_o(done_o)
+        .done_o()
     );
 
 
@@ -71,49 +71,7 @@ module DemodLowPass (
     output logic done_o
 );
     parameter int NumOfStages = 41;
-    logic signed [23:0] coeffs[NumOfStages] = '{
-        144,
-        797,
-        2561,
-        6017,
-        11095,
-        16239,
-        17830,
-        10563,
-        -10688,
-        -47567,
-        -94469,
-        -136116,
-        -148413,
-        -103711,
-        20196,
-        229968,
-        509453,
-        818924,
-        1102458,
-        1302031,
-        1373963,
-        1302031,
-        1102458,
-        818924,
-        509453,
-        229968,
-        20196,
-        -103711,
-        -148413,
-        -136116,
-        -94469,
-        -47567,
-        -10688,
-        10563,
-        17830,
-        16239,
-        11095,
-        6017,
-        2561,
-        797,
-        144
-    };
+    logic signed [23:0] coeffs[NumOfStages] = '{-1160, -4252, -5987, -249, 14455, 26725, 16225, -25132, -71262, -68926, 15144, 140039, 190488, 61713, -219237, -444611, -327982, 283633, 1242185, 2127762, 2487678, 2127762, 1242185, 283633, -327982, -444611, -219237, 61713, 190488, 140039, 15144, -68926, -71262, -25132, 16225, 26725, 14455, -249, -5987, -4252, -1160}
 
     FIRFilter #(
         .COEFF_LENGTH(NumOfStages)

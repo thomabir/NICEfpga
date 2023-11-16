@@ -1,5 +1,5 @@
-VERILOG_SOURCES = $(PWD)/*.sv $(PWD)/../../hardware/src/FIRFilter.sv $(PWD)/../../hardware/src/TickGen.sv
-TOPLEVEL=Filter
+VERILOG_SOURCES = $(PWD)/*.sv $(PWD)/../../hardware/src/FIRFilter.sv
+TOPLEVEL=FIRFilterTest
 MODULE=test
 
 SIM=verilator
