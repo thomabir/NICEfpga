@@ -30,7 +30,7 @@ def white_noise(num_samples, dc=0, std=1):
 @cocotb.test()  # pylint: disable=E1120
 async def test_white(dut):
     """Test the filter with white noise."""
-    clock = Clock(dut.clk_i, 1000, units="ns")  # 100 MHz clock
+    clock = Clock(dut.clk_i, 100, units="ns")  # 10 MHz clock
 
     n_steps = 100
     fs = 64e3  # sampling rate, Hz
@@ -60,7 +60,6 @@ async def test_white(dut):
     # n_steps = 8
     # signal_i_int = np.array([0, 1, 2, 3, 4, 5, 6, 7])
 
-
     for i in range(n_steps):
         dut.signal_i.value = int(signal_i_int[i])
         dut.start_i.value = 1
@@ -71,9 +70,6 @@ async def test_white(dut):
 
         await Timer(dt_ns_approx, units="ns")
         await FallingEdge(dut.clk_i)
-
-
-
 
     # decode the output
     signal_o = twos_complement_to_float(signal_o_int, 24)
@@ -89,6 +85,7 @@ async def test_white(dut):
     plt.plot(t, signal_o_int)
     plt.show()
 
+    exit()
 
     # fourier transform of signals
     signal_i_F = fft.fft(signal_i)

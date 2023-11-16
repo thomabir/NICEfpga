@@ -79,7 +79,7 @@ denom = float_to_fixed_arr(denom, num_frac_bits)
 
 # make sure all coefficients are within num_total_bits range
 assert max(max(num), max(denom)) < 2 ** (num_total_bits - 1) - 1
-assert min(min(num), min(denom)) > -2 ** (num_total_bits - 1)
+assert min(min(num), min(denom)) > -(2 ** (num_total_bits - 1))
 
 # print a, b
 print("denominator = ", end="")

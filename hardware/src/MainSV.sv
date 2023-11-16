@@ -36,23 +36,23 @@ module MainSV (
         .din1(pmodb_i[3]),
         .din2(pmodb_i[4]),
         .din3(pmodb_i[5]),
-        .ch1_o(adc1_o), // QPD1
-        .ch2_o(adc2_o), // QPD2
-        .ch3_o(adc3_o), // sin
-        .ch4_o(adc4_o), // cos
-        .ch5_o(adc5_o), // NC
-        .ch6_o(adc6_o), // NC
-        .ch7_o(adc7_o), // NC
-        .ch8_o(adc8_o), // NC
+        .ch1_o(adc1_o),  // QPD1
+        .ch2_o(adc2_o),  // QPD2
+        .ch3_o(adc3_o),  // sin
+        .ch4_o(adc4_o),  // cos
+        .ch5_o(adc5_o),  // NC
+        .ch6_o(adc6_o),  // NC
+        .ch7_o(adc7_o),  // NC
+        .ch8_o(adc8_o),  // NC
         .tick_o(adc_tick_o)
     );
 
 
     // input filters
-    logic signed [23:0] ifilt1_o; // QPD1
-    logic signed [23:0] ifilt2_o; // QPD2
-    logic signed [23:0] ifilt3_o; // sin
-    logic signed [23:0] ifilt4_o; // cos
+    logic signed [23:0] ifilt1_o;  // QPD1
+    logic signed [23:0] ifilt2_o;  // QPD2
+    logic signed [23:0] ifilt3_o;  // sin
+    logic signed [23:0] ifilt4_o;  // cos
     logic tick_ifilt_o;
 
     InputFilter ifilt1 (
@@ -96,7 +96,7 @@ module MainSV (
     logic signed [24:0] diff;
 
     assign sum  = - (ifilt1_o + ifilt2_o); // prefactor -1 to undo pi phase shift from inverting transimpedance amplifier
-    assign diff = - (ifilt1_o - ifilt2_o); // prefactor -1
+    assign diff = -(ifilt1_o - ifilt2_o);  // prefactor -1
 
 
     // lock-in amplifier

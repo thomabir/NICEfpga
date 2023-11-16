@@ -75,13 +75,13 @@ module IIRFilter #(
     always @(posedge clk_i) begin
         if (done_o) begin
             // Saturate if necessary
-            if (acc >= 2 ** (SIGNAL_BITS+COEFF_FRAC_BITS-1) - 1) begin
-                signal_o <= 2 ** (SIGNAL_BITS-1) - 1;
+            if (acc >= 2 ** (SIGNAL_BITS + COEFF_FRAC_BITS - 1) - 1) begin
+                signal_o <= 2 ** (SIGNAL_BITS - 1) - 1;
             end
-            else if (acc < -(2 ** (SIGNAL_BITS+COEFF_FRAC_BITS-1))) begin
-                signal_o <= -(2 ** (SIGNAL_BITS-1));
+            else if (acc < -(2 ** (SIGNAL_BITS + COEFF_FRAC_BITS - 1))) begin
+                signal_o <= -(2 ** (SIGNAL_BITS - 1));
             end
-            
+
             else begin
                 signal_o <= acc[COEFF_FRAC_BITS+SIGNAL_BITS-1:COEFF_FRAC_BITS];
             end
