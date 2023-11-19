@@ -127,7 +127,7 @@ module MainSV (
         .start_i(adc_tick_o),
         .signal_i(adc1_o),
         .signal_o(ifilt1_o),
-        .done_o()
+        .done_o(tick_ifilt_o)
     );
 
     QPDInputFilter qpdifilt2 (
@@ -157,14 +157,59 @@ module MainSV (
         .done_o()
     );
 
+    // Hilbert transformer to phase shift 100 Hz sin to make it cos
+    logic signed [23:0] sin100;
+    logic signed [23:0] cos100;
+    logic hilbert_done;
+    HilbertTransformerComplete #(
+        .NUM_BITS(24),
+        .COEFF_LENGTH(13)
+    ) hilbert1 (
+        .clk_i(clk_i),
+        .tick_i(tick_ifilt_o),
+        .reset_i(reset_i),
+        .signal_i(ifilt3_o),
+        .ha_coeffs({0, -28824, 0, -605240, 0, -4769003, 0, 4769003, 0, 605240, 0, 28824, 0}),
+        .delay_coeffs({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0}),
+        .sin_o(sin100),
+        .cos_o(cos100),
+        .done_o(hilbert_done)
+    );
 
-    // // current to position
+    // Then, Hilbert transformer's delay line to also shift the two QPD signals
+    logic signed [23:0] qpd1_delayed;
+    logic signed [23:0] qpd2_delayed;
+
+    FIRFilter #(
+        .COEFF_LENGTH(13)
+    ) qpd1_delay (
+        .clk_i(clk),
+        .tick_i(tick_ifilt_o),
+        .signal_i(ifilt1_o),
+        .signal_o(qpd1_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
+
+    FIRFilter #(
+        .COEFF_LENGTH(13)
+    ) qpd2_delay (
+        .clk_i(clk),
+        .tick_i(tick_ifilt_o),
+        .signal_i(ifilt2_o),
+        .signal_o(qpd2_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
+
+
+    // current to position
     logic signed [24:0] sum;
     logic signed [24:0] diff;
 
     // prefactor -1 to undo pi phase shift from inverting transimpedance amplifier
-    assign sum = -(ifilt1_o + ifilt2_o);
-    assign diff = -(ifilt1_o - ifilt2_o);
+    assign sum = -(qpd1_delayed + qpd2_delayed);
+    assign diff = -(qpd1_delayed - qpd2_delayed);
 
 
     // lock-in amplifier
@@ -177,11 +222,11 @@ module MainSV (
     QpdDemodulator demod (
         .clk_i(clk),
         .reset_i(reset),
-        .tick_i(tick_ifilt_o),
+        .tick_i(hilbert_done),
         .diff_i(diff[24:1]),
         .sum_i(sum[24:1]),
-        .sin_i(ifilt3_o),
-        .cos_i(ifilt4_o),
+        .sin_i(sin100),
+        .cos_i(cos100),
         .x1_o(x1),
         .x2_o(x2),
         .i1_o(i1),
