@@ -249,20 +249,9 @@ module MainSV (
     end
 
 
-    assign oreg1 = qpd1_delayed;
-    assign oreg2 = ifilt1_o;
-    assign oreg3 = cos100;
-    assign oreg4 = sin100;
-
-    // assign oreg1 = ifilt1_o;
-    // assign oreg2 = ifilt2_o;
-    // assign oreg3 = ifilt3_o;
-    // assign oreg4 = 1;
-
-    // assign oreg1 = 1; // adc1_o;
-    // assign oreg2 = adc2_o;
-    // assign oreg3 = adc3_o;
-    // assign oreg4 = adc4_o;
-
+    assign oreg1 = x1;
+    assign oreg2 = i1;
+    assign oreg3 = x2;
+    assign oreg4 = i2;
     assign oreg_count = counter;
 endmodule
