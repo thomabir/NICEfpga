@@ -175,6 +175,8 @@ int main() {
   int32_t adc1_int, adc2_int, adc3_int, adc4_int;
   double adc1, adc2, adc3, adc4;
 
+  double x1d, x2d; // corrected x and y positions
+
   prev_counter = 0;
 
   xil_printf("Starting loop\n\r");
@@ -183,10 +185,14 @@ int main() {
     // Get the current value of the counter
     counter = XGpio_DiscreteRead(&xgpio_in0, 1);
 
+    // printf("%d\n\r", counter);
+
+
     // if the counter is exactly 1 higher than the previous counter, we have a new value, and we perform the processing.
     // Otherwise, wait 10 us and try again
     // TODO use interrupts for this
     if (counter == prev_counter + 1) {
+
 
       adc1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
       adc2_int = XGpio_DiscreteRead(&xgpio_in2, 1);
@@ -195,9 +201,21 @@ int main() {
 
 
       // cast to doubles
-      // adc1 = (double)adc1_int;
-      // adc2 = (double)adc2_int;
-      // adc3 = (double)adc3_int;
+      adc1 = (double)adc1_int; // x1
+      adc2 = (double)adc2_int; // i1
+      adc3 = (double)adc3_int; // x2
+      adc4 = (double)adc4_int; // i2
+
+      // calculate the positions: xn = xn/in
+      x1d = adc1 / adc2;
+      x2d = adc3 / adc4;
+
+      // print
+       printf("%f, %f\n\r", x1d, x2d);
+
+      // print int values
+      printf("     %d, %d, %d, %d\n\r", adc1_int, adc2_int, adc3_int, adc4_int);
+
 
       // // calculate the phase using atan2
       // phase_d = -atan2(y_d, x_d);
