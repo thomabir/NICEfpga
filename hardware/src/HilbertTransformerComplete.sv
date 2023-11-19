@@ -34,7 +34,7 @@ module HilbertTransformerComplete #(
         .tick_i(tick_i),
         .signal_i(signal_i),
         .signal_o(sin_o),
-        .done_o(done_o),
+        .done_o(),
         .coeff(delay_coeffs)
     );
 
