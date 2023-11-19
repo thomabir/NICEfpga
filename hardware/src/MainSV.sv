@@ -42,19 +42,19 @@ module MainSV (
         .din1(pmodb_i[3]),
         .din2(pmodb_i[4]),
         .din3(pmodb_i[5]),
-        .ch1_o(adc1_o), // QPD1
-        .ch2_o(adc2_o), // QPD2
-        .ch3_o(adc3_o), // sin 100 Hz (CH1)
-        .ch4_o(adc4_o), // cos 100 Hz (CH2)
-        .ch5_o(adc5_o), // NC
-        .ch6_o(adc6_o), // NC
-        .ch7_o(adc7_o), // NC
-        .ch8_o(adc8_o), // NC
+        .ch1_o(adc1_o),  // QPD1
+        .ch2_o(adc2_o),  // QPD2
+        .ch3_o(adc3_o),  // sin 100 Hz (CH1)
+        .ch4_o(adc4_o),  // cos 100 Hz (CH2)
+        .ch5_o(adc5_o),  // NC
+        .ch6_o(adc6_o),  // NC
+        .ch7_o(adc7_o),  // NC
+        .ch8_o(adc8_o),  // NC
         .tick_o(adc_tick_o)
     );
 
 
-    
+
 
 
 
@@ -114,47 +114,47 @@ module MainSV (
 
 
     // input filters
-    logic signed [23:0] ifilt1_o; // QPD1
-    logic signed [23:0] ifilt2_o; // QPD2
-    logic signed [23:0] ifilt3_o; // sin
-    logic signed [23:0] ifilt4_o; // cos
+    logic signed [23:0] ifilt1_o;  // QPD1
+    logic signed [23:0] ifilt2_o;  // QPD2
+    logic signed [23:0] ifilt3_o;  // 100 Hz sin
+    logic signed [23:0] ifilt4_o;  // 10 kHz ref
     logic tick_ifilt_o;
 
     // pipe adc1 through ad3 through the QPD input filter
     QPDInputFilter qpdifilt1 (
-        .clk_i  (clk),
+        .clk_i(clk),
         .reset_i(reset),
         .start_i(adc_tick_o),
         .signal_i(adc1_o),
         .signal_o(ifilt1_o),
-        .done_o ()
+        .done_o()
     );
 
     QPDInputFilter qpdifilt2 (
-        .clk_i  (clk),
+        .clk_i(clk),
         .reset_i(reset),
         .start_i(adc_tick_o),
         .signal_i(adc2_o),
         .signal_o(ifilt2_o),
-        .done_o ()
+        .done_o()
     );
 
     QPDInputFilter qpdifilt3 (
-        .clk_i  (clk),
+        .clk_i(clk),
         .reset_i(reset),
         .start_i(adc_tick_o),
         .signal_i(adc3_o),
         .signal_o(ifilt3_o),
-        .done_o ()
+        .done_o()
     );
 
     QPDInputFilter qpdifilt4 (
-        .clk_i  (clk),
+        .clk_i(clk),
         .reset_i(reset),
         .start_i(adc_tick_o),
         .signal_i(adc4_o),
         .signal_o(ifilt4_o),
-        .done_o ()
+        .done_o()
     );
 
 
@@ -162,8 +162,9 @@ module MainSV (
     logic signed [24:0] sum;
     logic signed [24:0] diff;
 
-    assign sum  = - (ifilt1_o + ifilt2_o); // prefactor -1 to undo pi phase shift from inverting transimpedance amplifier
-    assign diff = - (ifilt1_o - ifilt2_o); // prefactor -1 as above
+    // prefactor -1 to undo pi phase shift from inverting transimpedance amplifier
+    assign sum = -(ifilt1_o + ifilt2_o);
+    assign diff = -(ifilt1_o - ifilt2_o);
 
 
     // lock-in amplifier
@@ -182,7 +183,7 @@ module MainSV (
         .sin_i(ifilt3_o),
         .cos_i(ifilt4_o),
         .x1_o(x1),
-        .y2_o(x2),
+        .x2_o(x2),
         .i1_o(i1),
         .i2_o(i2),
         .done_o(demod_done_o)
