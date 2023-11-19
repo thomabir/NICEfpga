@@ -16,7 +16,8 @@ module HilbertTransformerComplete #(
     // to generate the cos signal, the signal is delayed by 90 deg
     // because of causality, this will also introduce a delay in the sin signal
     FIRFilter #(
-        .COEFF_LENGTH(COEFF_LENGTH)
+        .COEFF_LENGTH(COEFF_LENGTH),
+        .BITWIDTH(NUM_BITS)
     ) cos_generator (
         .clk_i(clk_i),
         .tick_i(tick_i),
@@ -28,7 +29,8 @@ module HilbertTransformerComplete #(
 
     // to generate the sin signal, only use the delay line
     FIRFilter #(
-        .COEFF_LENGTH(COEFF_LENGTH)
+        .COEFF_LENGTH(COEFF_LENGTH),
+        .BITWIDTH(NUM_BITS)
     ) sin_generator (
         .clk_i(clk_i),
         .tick_i(tick_i),
