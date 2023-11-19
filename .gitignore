@@ -6,6 +6,7 @@ sim_build/
 *.vcd
 results.xml
 *.pdf
+*.hwdef
 
 # -----------------
 # macOS
