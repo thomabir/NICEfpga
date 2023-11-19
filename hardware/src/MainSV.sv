@@ -165,9 +165,9 @@ module MainSV (
         .NUM_BITS(24),
         .COEFF_LENGTH(13)
     ) hilbert1 (
-        .clk_i(clk_i),
+        .clk_i(clk),
         .tick_i(tick_ifilt_o),
-        .reset_i(reset_i),
+        .reset_i(reset),
         .signal_i(ifilt3_o),
         .ha_coeffs({0, -28824, 0, -605240, 0, -4769003, 0, 4769003, 0, 605240, 0, 28824, 0}),
         .delay_coeffs({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0}),
@@ -181,7 +181,8 @@ module MainSV (
     logic signed [23:0] qpd2_delayed;
 
     FIRFilter #(
-        .COEFF_LENGTH(13)
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
     ) qpd1_delay (
         .clk_i(clk),
         .tick_i(tick_ifilt_o),
@@ -192,7 +193,8 @@ module MainSV (
     );
 
     FIRFilter #(
-        .COEFF_LENGTH(13)
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
     ) qpd2_delay (
         .clk_i(clk),
         .tick_i(tick_ifilt_o),
@@ -241,15 +243,26 @@ module MainSV (
         if (reset) begin
             counter <= 0;
         end
-        else if (demod_done_o) begin
+        else if (hilbert_done) begin
             counter <= counter + 1;
         end
     end
 
 
-    assign oreg1 = x1;
-    assign oreg2 = x2;
-    assign oreg3 = i1;
-    assign oreg4 = i2;
+    assign oreg1 = qpd1_delayed;
+    assign oreg2 = ifilt1_o;
+    assign oreg3 = cos100;
+    assign oreg4 = sin100;
+
+    // assign oreg1 = ifilt1_o;
+    // assign oreg2 = ifilt2_o;
+    // assign oreg3 = ifilt3_o;
+    // assign oreg4 = 1;
+
+    // assign oreg1 = 1; // adc1_o;
+    // assign oreg2 = adc2_o;
+    // assign oreg3 = adc3_o;
+    // assign oreg4 = adc4_o;
+
     assign oreg_count = counter;
 endmodule
