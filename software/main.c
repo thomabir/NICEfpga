@@ -83,7 +83,7 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 251); // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 250); // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -175,7 +175,9 @@ int main() {
   int32_t adc1_int, adc2_int, adc3_int, adc4_int;
   double adc1, adc2, adc3, adc4;
 
+
   double x1d, x2d; // corrected x and y positions
+  int32_t x1d_int, x2d_int; // corrected x and y positions
 
   prev_counter = 0;
 
@@ -211,10 +213,15 @@ int main() {
       x2d = adc3 / adc4;
 
       // print
-       printf("%f, %f\n\r", x1d, x2d);
+//       printf("%f, %f\n\r", x1d, x2d);
 
       // print int values
-      printf("     %d, %d, %d, %d\n\r", adc1_int, adc2_int, adc3_int, adc4_int);
+//      printf("     %d, %d, %d, %d\n\r", adc1_int, adc2_int, adc3_int, adc4_int);
+
+
+      // convert xnd to int
+      x1d_int = (int32_t)(x1d * 10000);
+      x2d_int = (int32_t)(x2d * 10000);
 
 
       // // calculate the phase using atan2
@@ -253,8 +260,8 @@ int main() {
       payload[5 * vals_idx] = counter;
       payload[5 * vals_idx + 1] = adc1_int;
       payload[5 * vals_idx + 2] = adc2_int;
-      payload[5 * vals_idx + 3] = adc3_int;
-      payload[5 * vals_idx + 4] = adc4_int;
+      payload[5 * vals_idx + 3] = x1d_int;
+      payload[5 * vals_idx + 4] = x2d_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
