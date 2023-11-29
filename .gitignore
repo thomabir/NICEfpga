@@ -7,6 +7,10 @@ sim_build/
 results.xml
 *.pdf
 *.hwdef
+*.str
+*.jou
+*.log
+*.bda
 
 # -----------------
 # macOS
