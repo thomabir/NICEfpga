@@ -9,7 +9,12 @@ module MainV(
     output [31:0] oreg2,
     output [31:0] oreg3,
     output [31:0] oreg4,
-    output [31:0] oreg_count
+    output [31:0] oreg5,
+    output [31:0] oreg6,
+    output [31:0] oreg7,
+    output [31:0] oreg8,
+    output [31:0] oreg_count_pos,
+    output [31:0] oreg_count_opd
 );
     MainSV main_sv (
         .clk(clk),
@@ -22,6 +27,11 @@ module MainV(
         .oreg2(oreg2),
         .oreg3(oreg3),
         .oreg4(oreg4),
-        .oreg_count(oreg_count)
+        .oreg5(oreg5),
+        .oreg6(oreg6),
+        .oreg7(oreg7),
+        .oreg8(oreg8),
+        .oreg_count_pos(oreg_count_pos),
+        .oreg_count_opd(oreg_count_opd)
     );
 endmodule
