@@ -345,8 +345,8 @@ module MainSV (
   assign oreg2 = i1;
   assign oreg3 = x2;
   assign oreg4 = i2;
-  assign oreg5 = opd_x;
-  assign oreg6 = opd_y;
+  assign oreg5 = x_opd;
+  assign oreg6 = y_opd;
   assign oreg_count_pos = counter_pos;
   assign oreg_count_opd = counter_opd;
 endmodule
