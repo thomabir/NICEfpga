@@ -17,16 +17,14 @@
 
 #include "includes.h"
 #include "lwip/udp.h"
+#include "math.h"
 #include "sleep.h"
 #include "xgpio.h"
-#include "xspips.h"
 #include "xil_cache.h"
-#include "math.h"
+#include "xspips.h"
 
 #define PI 3.14159265359
 
-/* defined by each RAW mode application */
-void print_app_header();
 int start_application();
 
 void lwip_init();
@@ -56,14 +54,7 @@ void print_ip_settings(struct ip4_addr *ip, struct ip4_addr *mask, struct ip4_ad
   print_ip("Gateway : ", gw);
 }
 
-void print_app_header() {
-  xil_printf("\n\r\n\r------lwIP UDP GetCentroid Application------\n\r");
-  xil_printf("UDP packets sent to port 7 will be processed\n\r");
-}
-
-
 int main() {
-
   struct ip4_addr ipaddr, netmask, gw /*, Remotenetmask, Remotegw*/;
   struct pbuf *psnd;
   struct pbuf *psnd_sep;
@@ -82,11 +73,9 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 249); // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 249);  // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
-
-  print_app_header();
 
   /* Initialize the lwip for UDP */
   lwip_init();
@@ -133,7 +122,7 @@ int main() {
   XGpio xgpio_in0, xgpio_in1, xgpio_in2, xgpio_in3, xgpio_in4, xgpio_in5, xgpio_in6, xgpio_in7, xgpio_in8, xgpio_in9;
 
   xil_printf("Initializing payload container\n\r");
-  int payload_size = 10 * 5; // 10 packages of 5 ints
+  int payload_size = 10 * 5;  // 10 packages of 5 ints
   int payload[payload_size];
 
   xil_printf("Initializing GPIO\n\r");
@@ -166,7 +155,6 @@ int main() {
 
   XGpio_Initialize(&xgpio_in9, XPAR_AXI_GPIO_9_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in9, 1, 1);
-
 
   /* receive and process packets */
 
@@ -202,9 +190,8 @@ int main() {
   int32_t x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int, count_opd;
   double x1, i1, x2, i2, x_opd, y_opd;
 
-
-  double x1d, x2d; // corrected x and y positions
-  int32_t x1d_int, x2d_int; // corrected x and y positions
+  double x1d, x2d;           // corrected x and y positions
+  int32_t x1d_int, x2d_int;  // corrected x and y positions
 
   prev_count_pos = 0;
 
@@ -214,16 +201,13 @@ int main() {
     // Get the current value of the count_pos
     count_pos = XGpio_DiscreteRead(&xgpio_in0, 1);
 
-//     printf("%d\n\r", count_pos);
+    //     printf("%d\n\r", count_pos);
 
-
-    // if the count_pos is exactly 1 higher than the previous count_pos, we have a new value, and we perform the processing.
-    // Otherwise, wait 10 us and try again
+    // if the count_pos is exactly 1 higher than the previous count_pos, we have a new value, and we perform the
+    // processing. Otherwise, wait 10 us and try again
     // TODO use interrupts for this
     // if (count_pos == prev_count_pos + 1) {
     if (1) {
-
-
       x1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
       i1_int = XGpio_DiscreteRead(&xgpio_in2, 1);
       x2_int = XGpio_DiscreteRead(&xgpio_in3, 1);
@@ -231,12 +215,11 @@ int main() {
       x_opd_int = XGpio_DiscreteRead(&xgpio_in5, 1);
       y_opd_int = XGpio_DiscreteRead(&xgpio_in6, 1);
 
-
       // cast to doubles
-      x1 = (double)x1_int; // x1
-      i1 = (double)i1_int; // i1
-      x2 = (double)x2_int; // x2
-      i2 = (double)i2_int; // i2
+      x1 = (double)x1_int;  // x1
+      i1 = (double)i1_int;  // i1
+      x2 = (double)x2_int;  // x2
+      i2 = (double)i2_int;  // i2
 
       // calculate the positions: xn = xn/in
       x1d = x1 / i1;
@@ -248,11 +231,9 @@ int main() {
       // print int values
       printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
 
-
       // convert xnd to int
       x1d_int = (int32_t)(x1d * 10000);
       x2d_int = (int32_t)(x2d * 10000);
-
 
       // // calculate the phase using atan2
       // phase_d = -atan2(y_d, x_d);
