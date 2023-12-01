@@ -64,7 +64,6 @@ void print_app_header() {
 
 int main() {
 
-
   struct ip4_addr ipaddr, netmask, gw /*, Remotenetmask, Remotegw*/;
   struct pbuf *psnd;
   struct pbuf *psnd_sep;
@@ -83,7 +82,7 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 250); // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 249); // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -119,7 +118,19 @@ int main() {
   int pkg_no = 0;
   int vals_idx = 0;
 
-  XGpio xgpio_in0, xgpio_in1, xgpio_in2, xgpio_in3, xgpio_in4;
+  // current AXI GPIO setup:
+  // gpio0 -> count_pos
+  // gpio1 -> x1
+  // gpio2 -> i1
+  // gpio3 -> x2
+  // gpio4 -> i2
+  // gpio5 -> x_opd
+  // gpio6 -> y_opd
+  // gpio7 -> NC
+  // gpio8 -> NC
+  // gpio9 -> count_opd
+
+  XGpio xgpio_in0, xgpio_in1, xgpio_in2, xgpio_in3, xgpio_in4, xgpio_in5, xgpio_in6, xgpio_in7, xgpio_in8, xgpio_in9;
 
   xil_printf("Initializing payload container\n\r");
   int payload_size = 10 * 5; // 10 packages of 5 ints
@@ -140,6 +151,22 @@ int main() {
 
   XGpio_Initialize(&xgpio_in4, XPAR_AXI_GPIO_4_DEVICE_ID);
   XGpio_SetDataDirection(&xgpio_in4, 1, 1);
+
+  XGpio_Initialize(&xgpio_in5, XPAR_AXI_GPIO_5_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in5, 1, 1);
+
+  XGpio_Initialize(&xgpio_in6, XPAR_AXI_GPIO_6_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in6, 1, 1);
+
+  XGpio_Initialize(&xgpio_in7, XPAR_AXI_GPIO_7_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in7, 1, 1);
+
+  XGpio_Initialize(&xgpio_in8, XPAR_AXI_GPIO_8_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in8, 1, 1);
+
+  XGpio_Initialize(&xgpio_in9, XPAR_AXI_GPIO_9_DEVICE_ID);
+  XGpio_SetDataDirection(&xgpio_in9, 1, 1);
+
 
   /* receive and process packets */
 
@@ -171,52 +198,55 @@ int main() {
   /* Save the PCB to the global variable */
   send_pcb = *pcb;
 
-  int32_t counter, prev_counter;
-  int32_t adc1_int, adc2_int, adc3_int, adc4_int;
-  double adc1, adc2, adc3, adc4;
+  int32_t count_pos, prev_count_pos;
+  int32_t x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int, count_opd;
+  double x1, i1, x2, i2, x_opd, y_opd;
 
 
   double x1d, x2d; // corrected x and y positions
   int32_t x1d_int, x2d_int; // corrected x and y positions
 
-  prev_counter = 0;
+  prev_count_pos = 0;
 
   xil_printf("Starting loop\n\r");
 
   while (1) {
-    // Get the current value of the counter
-    counter = XGpio_DiscreteRead(&xgpio_in0, 1);
+    // Get the current value of the count_pos
+    count_pos = XGpio_DiscreteRead(&xgpio_in0, 1);
 
-    // printf("%d\n\r", counter);
+//     printf("%d\n\r", count_pos);
 
 
-    // if the counter is exactly 1 higher than the previous counter, we have a new value, and we perform the processing.
+    // if the count_pos is exactly 1 higher than the previous count_pos, we have a new value, and we perform the processing.
     // Otherwise, wait 10 us and try again
     // TODO use interrupts for this
-    if (counter == prev_counter + 1) {
+    // if (count_pos == prev_count_pos + 1) {
+    if (1) {
 
 
-      adc1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
-      adc2_int = XGpio_DiscreteRead(&xgpio_in2, 1);
-      adc3_int = XGpio_DiscreteRead(&xgpio_in3, 1);
-      adc4_int = XGpio_DiscreteRead(&xgpio_in4, 1);
+      x1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
+      i1_int = XGpio_DiscreteRead(&xgpio_in2, 1);
+      x2_int = XGpio_DiscreteRead(&xgpio_in3, 1);
+      i2_int = XGpio_DiscreteRead(&xgpio_in4, 1);
+      x_opd_int = XGpio_DiscreteRead(&xgpio_in5, 1);
+      y_opd_int = XGpio_DiscreteRead(&xgpio_in6, 1);
 
 
       // cast to doubles
-      adc1 = (double)adc1_int; // x1
-      adc2 = (double)adc2_int; // i1
-      adc3 = (double)adc3_int; // x2
-      adc4 = (double)adc4_int; // i2
+      x1 = (double)x1_int; // x1
+      i1 = (double)i1_int; // i1
+      x2 = (double)x2_int; // x2
+      i2 = (double)i2_int; // i2
 
       // calculate the positions: xn = xn/in
-      x1d = adc1 / adc2;
-      x2d = adc3 / adc4;
+      x1d = x1 / i1;
+      x2d = x2 / i2;
 
       // print
-//       printf("%f, %f\n\r", x1d, x2d);
+      // printf("%f, %f\n\r", x1d, x2d);
 
       // print int values
-//      printf("     %d, %d, %d, %d\n\r", adc1_int, adc2_int, adc3_int, adc4_int);
+      printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
 
 
       // convert xnd to int
@@ -243,8 +273,8 @@ int main() {
       // convert the phase to a fixed point number, with 3 decimal places
       // phase_int = (int32_t)(phase_d * 1000);
 
-      // print adc1_int
-      // printf("%d\n\r", adc1_int);
+      // print x1_int
+      // printf("%d\n\r", x1_int);
 
       // print using printf
       // printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
@@ -252,14 +282,14 @@ int main() {
       // print phase_int
       // printf("%d\n\r", phase_int);
 
-      // store counter and phase_int in payload
-      // payload[2 * vals_idx] = counter;
+      // store count_pos and phase_int in payload
+      // payload[2 * vals_idx] = count_pos;
       // payload[2 * vals_idx + 1] = phase_int;
 
-      // store counter and adc readings in payload
-      payload[5 * vals_idx] = counter;
-      payload[5 * vals_idx + 1] = adc1_int;
-      payload[5 * vals_idx + 2] = adc2_int;
+      // store count_pos and adc readings in payload
+      payload[5 * vals_idx] = count_pos;
+      payload[5 * vals_idx + 1] = x1_int;
+      payload[5 * vals_idx + 2] = i1_int;
       payload[5 * vals_idx + 3] = x1d_int;
       payload[5 * vals_idx + 4] = x2d_int;
 
@@ -295,8 +325,8 @@ int main() {
       }
     }
 
-    // set the previous counter to the current counter
-    prev_counter = counter;
+    // set the previous count_pos to the current count_pos
+    prev_count_pos = count_pos;
 
     // usleep(10000);
   }
