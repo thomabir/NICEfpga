@@ -51,7 +51,7 @@ where `/dev/ttyUSB1` is the UART device (check which one is the right one), and 
 
 - Sometimes, you may have switch the USB port to which the Zynq UART is connected.
 - If you get `screen is terminating`, try the command with `sudo`, or try to connect to an already existing `screen` session with `screen -r`.
-- To pause the output from the terminal, press `Ctrl + q`, and to resume press `Ctrl + s`.
+- To pause the output from the terminal, press `Ctrl + s`, and to resume press `Ctrl + q`.
 - If messages arrive broken or unreliably, make sure the baudrate is correct (115200), and power cycle the FPGA board and the computer.
 
 ## Acknowledgements
