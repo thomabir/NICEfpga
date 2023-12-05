@@ -186,9 +186,9 @@ int main() {
   /* Save the PCB to the global variable */
   send_pcb = *pcb;
 
-  int32_t count_pos, prev_count_pos;
+  int32_t count_pos, prev_count_pos, phase_int;
   int32_t x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int, count_opd;
-  double x1, i1, x2, i2, x_opd, y_opd;
+  double x1, i1, x2, i2, x_opd, y_opd, phase_d, prev_phase_d;
 
   double x1d, x2d;           // corrected x and y positions
   int32_t x1d_int, x2d_int;  // corrected x and y positions
@@ -199,15 +199,16 @@ int main() {
 
   while (1) {
     // Get the current value of the count_pos
-    count_pos = XGpio_DiscreteRead(&xgpio_in0, 1);
+    // count_pos = XGpio_DiscreteRead(&xgpio_in0, 1);
+    count_pos = XGpio_DiscreteRead(&xgpio_in9, 1); // opd counter
 
     //     printf("%d\n\r", count_pos);
 
     // if the count_pos is exactly 1 higher than the previous count_pos, we have a new value, and we perform the
     // processing. Otherwise, wait 10 us and try again
     // TODO use interrupts for this
-    // if (count_pos == prev_count_pos + 1) {
-    if (1) {
+    if (count_pos == prev_count_pos + 1) {
+    // if (1) {
       x1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
       i1_int = XGpio_DiscreteRead(&xgpio_in2, 1);
       x2_int = XGpio_DiscreteRead(&xgpio_in3, 1);
@@ -215,44 +216,37 @@ int main() {
       x_opd_int = XGpio_DiscreteRead(&xgpio_in5, 1);
       y_opd_int = XGpio_DiscreteRead(&xgpio_in6, 1);
 
+      // print raw values
+      // printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
+
       // cast to doubles
       x1 = (double)x1_int;  // x1
       i1 = (double)i1_int;  // i1
       x2 = (double)x2_int;  // x2
       i2 = (double)i2_int;  // i2
+      x_opd = (double)x_opd_int;
+      y_opd = (double)y_opd_int;
 
       // calculate the positions: xn = xn/in
       x1d = x1 / i1;
       x2d = x2 / i2;
 
-      // print
-      // printf("%f, %f\n\r", x1d, x2d);
+      // calculate the phase using atan2
+      phase_d = -atan2(y_opd, x_opd);
 
-      // print int values
-      printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
+      // convert from rad to deg
+      phase_d = phase_d * 180. / PI;
 
-      // convert xnd to int
-      x1d_int = (int32_t)(x1d * 10000);
-      x2d_int = (int32_t)(x2d * 10000);
-
-      // // calculate the phase using atan2
-      // phase_d = -atan2(y_d, x_d);
-
-      // // convert from rad to deg
-      // phase_d = phase_d * 180. / PI;
-
-      // // unwrap the phase
-      // if (phase_d < prev_phase_d - 180) {
-      //   phase_d += 360;
-      // } else if (phase_d > prev_phase_d + 180) {
-      //   phase_d -= 360;
-      // }
+      // unwrap the phase
+      if (phase_d < prev_phase_d - 180) {
+        phase_d += 360;
+      } else if (phase_d > prev_phase_d + 180) {
+        phase_d -= 360;
+      }
 
       // set the previous phase to the current phase
-      // prev_phase_d = phase_d;
-
-      // convert the phase to a fixed point number, with 3 decimal places
-      // phase_int = (int32_t)(phase_d * 1000);
+      prev_phase_d = phase_d;
+ 
 
       // print x1_int
       // printf("%d\n\r", x1_int);
@@ -263,16 +257,31 @@ int main() {
       // print phase_int
       // printf("%d\n\r", phase_int);
 
+      // convert to nm
+      phase_d = phase_d * 632.8 / 360;
+
+      // convert pos to um
+      x1d = x1d * 1.11e3;
+      x2d = x2d * 1.11e3;
+
+      // print floats
+      // printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
+
+      // convert to fixed point for sending
+      x1d_int = (int32_t)(x1d * 1000); // nm
+      x2d_int = (int32_t)(x2d * 1000); // nm
+      phase_int = (int32_t)(phase_d * 1000); // pm
+
       // store count_pos and phase_int in payload
       // payload[2 * vals_idx] = count_pos;
       // payload[2 * vals_idx + 1] = phase_int;
 
       // store count_pos and adc readings in payload
       payload[5 * vals_idx] = count_pos;
-      payload[5 * vals_idx + 1] = x1_int;
-      payload[5 * vals_idx + 2] = i1_int;
-      payload[5 * vals_idx + 3] = x1d_int;
-      payload[5 * vals_idx + 4] = x2d_int;
+      payload[5 * vals_idx + 1] = x1d_int;
+      payload[5 * vals_idx + 2] = x2d_int;
+      payload[5 * vals_idx + 3] = phase_int;
+      payload[5 * vals_idx + 4] = i1_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
