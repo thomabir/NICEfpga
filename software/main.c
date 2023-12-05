@@ -186,28 +186,36 @@ int main() {
   /* Save the PCB to the global variable */
   send_pcb = *pcb;
 
-  int32_t count_pos, prev_count_pos, phase_int;
-  int32_t x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int, count_opd;
+  // counters
+  int32_t count_pos, prev_count_pos, count_opd, prev_count_opd, phase_int;
+
+  // fpga signals
+  int32_t x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int;
+
+  // derived values
   double x1, i1, x2, i2, x_opd, y_opd, phase_d, prev_phase_d;
 
   double x1d, x2d;           // corrected x and y positions
   int32_t x1d_int, x2d_int;  // corrected x and y positions
 
   prev_count_pos = 0;
+  prev_count_opd = 0;
 
   xil_printf("Starting loop\n\r");
 
   while (1) {
     // Get the current value of the count_pos
-    // count_pos = XGpio_DiscreteRead(&xgpio_in0, 1);
-    count_pos = XGpio_DiscreteRead(&xgpio_in9, 1); // opd counter
+    count_pos = XGpio_DiscreteRead(&xgpio_in0, 1);
+    count_opd = XGpio_DiscreteRead(&xgpio_in9, 1);
 
     //     printf("%d\n\r", count_pos);
 
     // if the count_pos is exactly 1 higher than the previous count_pos, we have a new value, and we perform the
     // processing. Otherwise, wait 10 us and try again
     // TODO use interrupts for this
-    if (count_pos == prev_count_pos + 1) {
+
+    // calculate position and send
+    if (count_opd == prev_count_opd + 1) {
     // if (1) {
       x1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
       i1_int = XGpio_DiscreteRead(&xgpio_in2, 1);
@@ -317,6 +325,7 @@ int main() {
 
     // set the previous count_pos to the current count_pos
     prev_count_pos = count_pos;
+    prev_count_opd = count_opd;
 
     // usleep(10000);
   }
