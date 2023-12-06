@@ -120,6 +120,10 @@ ax.set_ylabel("Gain")
 ax.set_xlabel("Frequency (Hz)")
 fig.savefig("02-cic-decimator-freq-response-zoom.pdf", bbox_inches="tight")
 
+# print attenuation at 10 kHz, and at 100 Hz
+print(f"Attenuation at 10 kHz: {np.abs(H(10e3 / fs_1, decimationRatio, order))}")
+print(f"Attenuation at 100 Hz: {np.abs(H(100 / fs_1, decimationRatio, order))}")
+
 
 freqResponseCompensation = 1 / np.abs(H(fn_1 / decimationRatio, decimationRatio, order))  # ** 2
 
