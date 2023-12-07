@@ -1,4 +1,3 @@
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal as sig
@@ -120,19 +119,15 @@ ax.set_ylabel("Gain")
 ax.set_xlabel("Frequency (Hz)")
 fig.savefig("02-cic-decimator-freq-response-zoom.pdf", bbox_inches="tight")
 
-# print attenuation at 10 kHz, and at 100 Hz
-print(f"Attenuation at 10 kHz: {np.abs(H(10e3 / fs_1, decimationRatio, order))}")
-print(f"Attenuation at 100 Hz: {np.abs(H(100 / fs_1, decimationRatio, order))}")
-
 
 freqResponseCompensation = 1 / np.abs(H(fn_1 / decimationRatio, decimationRatio, order))  # ** 2
 
 # add a high frequency cut-off
-cutoff_high = f_2 > 600
+cutoff_high = f_2 > 1100
 freqResponseCompensation[cutoff_high] = 0
 
 # add a low frequency cut-off
-cutoff_low = f_2 < 400
+cutoff_low = f_2 < 900
 freqResponseCompensation[cutoff_low] = 0
 
 # Plot of the required frequency compensation filter
@@ -149,10 +144,10 @@ fig.savefig("03-compensation-filter-required.pdf", bbox_inches="tight")
 num_stages_compFilter = 25  # don't need many stages to compensate for CIC.
 weight = np.zeros((500))
 f_weight = np.linspace(0, fs_2 / 2, 500)
-weight[f_weight < 100] = 1
-idx_passband = np.logical_and(f_weight > 400, f_weight < 600)
+weight[f_weight < 500] = 1
+idx_passband = np.logical_and(f_weight > 900, f_weight < 1100)
 weight[idx_passband] = 1
-weight[f_weight > 1100] = 1
+weight[f_weight > 1500] = 1
 # compFilter = sig.firwin2(num_stages_compFilter, fn_1, freqResponseCompensation, fs=fsn_1)
 compFilter = sig.firls(num_stages_compFilter, fn_2, freqResponseCompensation, fs=fsn_2, weight=weight)
 
@@ -163,7 +158,6 @@ f_w = w * fs_1
 
 fig, ax = plt.subplots()
 ax.set_title("Compensation filter frequency response")
-
 ax.plot(f_w, abs(h_comp), label="Actual response")
 ax.plot(f_2, freqResponseCompensation, ":", label="Desired response")
 ax.xaxis.set_major_formatter(formatter_hz)
@@ -180,7 +174,7 @@ H_tot = H(w, decimationRatio, order) * h_comp
 fig, ax = plt.subplots()
 ax.plot(f_w, abs(H_tot), label="Combined response")
 ax.xaxis.set_major_formatter(formatter_hz)
-ax.set_xlim(0, fs_2)
+ax.set_xlim(0, fs_2 / 2)
 ax.set_title("Combined frequency response")
 ax.set_ylabel("Gain")
 ax.set_xlabel("Normalized frequency")
@@ -191,11 +185,11 @@ print(f"FIR filter order: {len(compFilter)}")
 
 # print attenuation at 50 Hz
 idx50Hz = np.argmin(np.abs(f_w - 50))
-print(f"Attenuation at 50 Hz: {np.abs(H_tot[idx50Hz])}")
+print(f"Gain at 50 Hz: {np.abs(H_tot[idx50Hz])}")
 
 # print attenuation of the CIC (not the combined response) at 10 kHz
 idx10kHz = np.argmin(np.abs(f_1 - 10e3))
-print(f"Attenuation at 10 kHz: {np.abs(H_cic[idx10kHz])}")
+print(f"Gain at 10 kHz: {np.abs(H_cic[idx10kHz])}")
 
 # How many bits do we need to represent the weights?
 minNumber = np.min(np.abs(compFilter))

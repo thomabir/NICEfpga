@@ -47,7 +47,7 @@ formatter_hz = EngFormatter(unit="Hz")
 # Source: https://link.springer.com/chapter/10.1007/978-3-030-49256-4_11#Equ6
 
 N = 13  # number of filter stages
-# (goal: gain of at least 0.99 at 100 Hz)
+# (goal: gain of at least 0.99 at 500 Hz)
 
 filter_coeffs = np.zeros((N))
 filter_index = np.arange(N) - (N - 1) / 2
@@ -81,9 +81,10 @@ fig.savefig("fig/hilbert-coeffs.pdf", bbox_inches="tight")
 
 
 N_plot = 4096
+target_frequency = 1000  # Hz
 
 # Find the frequency response of the Hilbert transformer
-sampling_rate = 500  # Hz
+sampling_rate = 4000  # Hz
 f_w, h_causal = sig.freqz(filter_coeffs, fs=sampling_rate, worN=N_plot)
 
 # Find the frequency response of the delay
@@ -112,8 +113,8 @@ def plot_bode(f, h, title, filename, annotate=False):
 
     # if annotate is True, add annotate the plot with gain and phase at 10 kHz
     if annotate:
-        # evaluate which index in f is closest to 100 Hz
-        index = np.argmin(np.abs(f - 100))
+        # evaluate which index in f is closest to target frequency
+        index = np.argmin(np.abs(f - target_frequency))
 
         # add multi-line text to the center of the plot
         ax.text(

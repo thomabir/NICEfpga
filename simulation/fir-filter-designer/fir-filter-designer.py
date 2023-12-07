@@ -1,4 +1,4 @@
-"""This module calculates the filter coefficients for the FIR bandpass input filter."""
+"""This module calculates the filter coefficients for the FIR lowpass filter in the QPD Demodulator."""
 import os
 
 import matplotlib.pyplot as plt
@@ -16,9 +16,9 @@ if not os.path.exists(plot_dir):
     os.makedirs(plot_dir)
 
 
-fs = 64e3/128  # sampling frequency, Hz
+fs = 64e3 / 16  # sampling frequency, Hz
 f1 = 0
-f2 = 50
+f2 = 100
 num_stages_fir_filter = 41
 
 f = np.linspace(0, fs / 2, 1000)
@@ -29,11 +29,10 @@ desired_gain[(f >= f1) & (f <= f2)] = 1
 
 weight = np.zeros(len(f))
 weight[(f <= f2)] = 1
-weight[(f >= 100)] = 1
+weight[(f >= 500)] = 1
 
 # remove every second element from weight
 weight_bands = weight[::2]
-
 
 
 # use firls to design the filter
