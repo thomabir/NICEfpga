@@ -5,6 +5,7 @@ import numpy as np
 import scipy.fftpack as fft
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, Timer
+from scipy import signal
 
 
 def twos_complement_to_float(value, bits):
@@ -85,29 +86,15 @@ async def test_white(dut):
     plt.plot(t, signal_o_int)
     plt.show()
 
-    # fourier transform of signals
-    signal_i_F = fft.fft(signal_i)
-    signal_o_F = fft.fft(signal_o)
+    # Welch periodogram of signals
+    f, Pxx_i = signal.welch(signal_i, fs, nperseg=1000)
+    f, Pxx_o = signal.welch(signal_o, fs, nperseg=1000)
 
-    # shift
-    signal_i_F = fft.fftshift(signal_i_F)
-    signal_o_F = fft.fftshift(signal_o_F)
 
-    # frequency axis
-    f = fft.fftfreq(signal_i_F.size, d=dt)
-    f = fft.fftshift(f)
-
-    # remove noise (low signal levels in the fft)
-    idx_i = np.abs(signal_i_F) > 1e-3
-    idx_o = np.abs(signal_o_F) > 1e-3
-    idx = np.logical_or(idx_i, idx_o)
-    signal_i_F = signal_i_F[idx]
-    signal_o_F = signal_o_F[idx]
-    f = f[idx]
 
     # gain and phase
-    gain = np.abs(signal_o_F / signal_i_F)
-    phase = np.angle(signal_o_F / signal_i_F)
+    gain = np.abs(Pxx_o / Pxx_i)
+    phase = np.angle(Pxx_o / Pxx_i)
 
     # plt.semilogy(f, Pxx_i)
     # plt.semilogy(f, Pxx_o)

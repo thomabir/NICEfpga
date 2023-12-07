@@ -8,7 +8,7 @@ SIM=verilator
 COCOTB_HDL_TIMEPRECISION = 1ns
 COCOTB_HDL_TIMEUNIT = 10ns
 
-EXTRA_ARGS += --trace --trace-structs -Wno-TIMESCALEMOD -Wno-STMTDLY # last one ignores warnings, TODO fix this
+EXTRA_ARGS += --trace --trace-structs -Wno-TIMESCALEMOD -Wno-STMTDLY -WnoUNOPTFLAT
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
