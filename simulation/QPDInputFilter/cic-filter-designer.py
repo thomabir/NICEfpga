@@ -64,8 +64,8 @@ def float_to_fixed_arr(arr, n_bits=16):
 # parameters
 bits_input = 24
 fs_1 = 64e3  # Hz, input sampling freq
-decimationRatio = 128  # power of 2
-order = 2  # number of stages
+decimationRatio = 16  # power of 2
+order = 5  # number of stages
 
 #
 bits_internal = np.ceil(np.log2(decimationRatio**order)) + bits_input
@@ -95,11 +95,11 @@ fn_2 = np.linspace(0, fsn_2 / 2, 1000)  # normalized frequency array
 f_2 = fn_2 * fs_1  # actual frequency array
 
 
-freqResp = H(fn_1, decimationRatio, order)
+H_cic = H(fn_1, decimationRatio, order)
 
 # Bode plot
 fig, ax = plt.subplots()
-ax.semilogy(f_1, np.abs(freqResp))
+ax.semilogy(f_1, np.abs(H_cic))
 ax.xaxis.set_major_formatter(formatter_hz)
 # plt.xlim(0, 1)
 ax.set_ylim(1e-6, 2)
@@ -111,9 +111,9 @@ fig.savefig("01-cic-decimator-freq-response.pdf", bbox_inches="tight")
 
 # Zoom into the low freq region of the plot above
 fig, ax = plt.subplots()
-ax.plot(f_1, np.abs(freqResp))
+ax.plot(f_1, np.abs(H_cic))
 ax.xaxis.set_major_formatter(formatter_hz)
-plt.xlim(0, 400)
+plt.xlim(0, fs_2)
 # ax.set_ylim(1e-6, 2)
 ax.set_title("Zoomed in magnitude response of CIC decimator")
 ax.set_ylabel("Gain")
@@ -128,11 +128,11 @@ print(f"Attenuation at 100 Hz: {np.abs(H(100 / fs_1, decimationRatio, order))}")
 freqResponseCompensation = 1 / np.abs(H(fn_1 / decimationRatio, decimationRatio, order))  # ** 2
 
 # add a high frequency cut-off
-cutoff_high = f_2 > 120
+cutoff_high = f_2 > 600
 freqResponseCompensation[cutoff_high] = 0
 
 # add a low frequency cut-off
-cutoff_low = f_2 < 80
+cutoff_low = f_2 < 400
 freqResponseCompensation[cutoff_low] = 0
 
 # Plot of the required frequency compensation filter
@@ -149,10 +149,10 @@ fig.savefig("03-compensation-filter-required.pdf", bbox_inches="tight")
 num_stages_compFilter = 25  # don't need many stages to compensate for CIC.
 weight = np.zeros((500))
 f_weight = np.linspace(0, fs_2 / 2, 500)
-weight[f_weight < 10] = 1
-idx_passband = np.logical_and(f_weight > 80, f_weight < 120)
+weight[f_weight < 100] = 1
+idx_passband = np.logical_and(f_weight > 400, f_weight < 600)
 weight[idx_passband] = 1
-weight[f_weight > 190] = 1
+weight[f_weight > 1100] = 1
 # compFilter = sig.firwin2(num_stages_compFilter, fn_1, freqResponseCompensation, fs=fsn_1)
 compFilter = sig.firls(num_stages_compFilter, fn_2, freqResponseCompensation, fs=fsn_2, weight=weight)
 
@@ -173,7 +173,6 @@ ax.set_xlabel("Normalized frequency")
 ax.legend()
 fig.savefig("04-compensation-filter-freq-response-actual.pdf", bbox_inches="tight")
 
-
 # plot combined response
 
 H_tot = H(w, decimationRatio, order) * h_comp
@@ -181,7 +180,7 @@ H_tot = H(w, decimationRatio, order) * h_comp
 fig, ax = plt.subplots()
 ax.plot(f_w, abs(H_tot), label="Combined response")
 ax.xaxis.set_major_formatter(formatter_hz)
-ax.set_xlim(0, 200)
+ax.set_xlim(0, fs_2)
 ax.set_title("Combined frequency response")
 ax.set_ylabel("Gain")
 ax.set_xlabel("Normalized frequency")
@@ -189,6 +188,14 @@ ax.legend()
 fig.savefig("05-combined-response.pdf", bbox_inches="tight")
 
 print(f"FIR filter order: {len(compFilter)}")
+
+# print attenuation at 50 Hz
+idx50Hz = np.argmin(np.abs(f_w - 50))
+print(f"Attenuation at 50 Hz: {np.abs(H_tot[idx50Hz])}")
+
+# print attenuation of the CIC (not the combined response) at 10 kHz
+idx10kHz = np.argmin(np.abs(f_1 - 10e3))
+print(f"Attenuation at 10 kHz: {np.abs(H_cic[idx10kHz])}")
 
 # How many bits do we need to represent the weights?
 minNumber = np.min(np.abs(compFilter))
