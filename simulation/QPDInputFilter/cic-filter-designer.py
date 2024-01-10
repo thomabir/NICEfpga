@@ -63,7 +63,7 @@ def float_to_fixed_arr(arr, n_bits=16):
 # parameters
 bits_input = 24
 fs_1 = 64e3  # Hz, input sampling freq
-decimationRatio = 16  # power of 2
+decimationRatio = 64  # power of 2
 order = 5  # number of stages
 
 #
@@ -123,12 +123,18 @@ fig.savefig("02-cic-decimator-freq-response-zoom.pdf", bbox_inches="tight")
 freqResponseCompensation = 1 / np.abs(H(fn_1 / decimationRatio, decimationRatio, order))  # ** 2
 
 # add a high frequency cut-off
-cutoff_high = f_2 > 1100
+pass_high_freq = 280  # Hz
+cutoff_high = f_2 > pass_high_freq
 freqResponseCompensation[cutoff_high] = 0
 
 # add a low frequency cut-off
-cutoff_low = f_2 < 900
+pass_low_freq = 230  # Hz
+cutoff_low = f_2 < pass_low_freq
 freqResponseCompensation[cutoff_low] = 0
+
+# block everything until dc_block_freq
+low_block_freq = 150  # Hz
+high_block_freq = 400  # Hz
 
 # Plot of the required frequency compensation filter
 fig, ax = plt.subplots()
@@ -141,13 +147,13 @@ ax.set_xlabel("Normalized frequency")
 fig.savefig("03-compensation-filter-required.pdf", bbox_inches="tight")
 
 
-num_stages_compFilter = 25  # don't need many stages to compensate for CIC.
+num_stages_compFilter = 35
 weight = np.zeros((500))
 f_weight = np.linspace(0, fs_2 / 2, 500)
-weight[f_weight < 500] = 1
-idx_passband = np.logical_and(f_weight > 900, f_weight < 1100)
+weight[f_weight < low_block_freq] = 1
+idx_passband = np.logical_and(f_weight > pass_low_freq, f_weight < pass_high_freq)
 weight[idx_passband] = 1
-weight[f_weight > 1500] = 1
+weight[f_weight > high_block_freq] = 1
 # compFilter = sig.firwin2(num_stages_compFilter, fn_1, freqResponseCompensation, fs=fsn_1)
 compFilter = sig.firls(num_stages_compFilter, fn_2, freqResponseCompensation, fs=fsn_2, weight=weight)
 
@@ -168,7 +174,6 @@ ax.legend()
 fig.savefig("04-compensation-filter-freq-response-actual.pdf", bbox_inches="tight")
 
 # plot combined response
-
 H_tot = H(w, decimationRatio, order) * h_comp
 
 fig, ax = plt.subplots()
@@ -180,6 +185,17 @@ ax.set_ylabel("Gain")
 ax.set_xlabel("Normalized frequency")
 ax.legend()
 fig.savefig("05-combined-response.pdf", bbox_inches="tight")
+
+# plot combined response log
+fig, ax = plt.subplots()
+ax.semilogy(f_w, abs(H_tot), label="Combined response (log)")
+ax.xaxis.set_major_formatter(formatter_hz)
+ax.set_xlim(0, fs_2 / 2)
+ax.set_title("Combined frequency response")
+ax.set_ylabel("Gain")
+ax.set_xlabel("Normalized frequency")
+ax.legend()
+fig.savefig("06-combined-response-log.pdf", bbox_inches="tight")
 
 print(f"FIR filter order: {len(compFilter)}")
 

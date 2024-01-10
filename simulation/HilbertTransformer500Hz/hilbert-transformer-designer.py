@@ -81,10 +81,10 @@ fig.savefig("fig/hilbert-coeffs.pdf", bbox_inches="tight")
 
 
 N_plot = 4096
-target_frequency = 1000  # Hz
+target_frequency = 250  # Hz
 
 # Find the frequency response of the Hilbert transformer
-sampling_rate = 4000  # Hz
+sampling_rate = 1000  # Hz
 f_w, h_causal = sig.freqz(filter_coeffs, fs=sampling_rate, worN=N_plot)
 
 # Find the frequency response of the delay
