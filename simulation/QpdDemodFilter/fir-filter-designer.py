@@ -18,8 +18,8 @@ if not os.path.exists(plot_dir):
 
 fs = 64e3 / 64  # sampling frequency, Hz
 f1 = 0
-f2 = 100
-stopband_freq = 200
+f2 = 10
+stopband_freq = 50
 num_stages_fir_filter = 41
 
 f = np.linspace(0, fs / 2, 1000)
