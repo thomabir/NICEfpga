@@ -73,7 +73,7 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 249);  // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 248);  // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -225,7 +225,7 @@ int main() {
       y_opd_int = XGpio_DiscreteRead(&xgpio_in6, 1);
 
       // print raw values
-      // printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
+//      printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
 
       // cast to doubles
       x1 = (double)x1_int;  // x1
@@ -254,13 +254,13 @@ int main() {
 
       // set the previous phase to the current phase
       prev_phase_d = phase_d;
- 
+
 
       // print x1_int
       // printf("%d\n\r", x1_int);
 
       // print using printf
-      // printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
+//       printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
 
       // print phase_int
       // printf("%d\n\r", phase_int);
@@ -273,7 +273,7 @@ int main() {
       x2d = x2d * 1.11e3;
 
       // print floats
-      // printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
+//       printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
 
       // convert to fixed point for sending
       x1d_int = (int32_t)(x1d * 1000); // nm
