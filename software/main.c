@@ -122,7 +122,7 @@ int main() {
   XGpio xgpio_in0, xgpio_in1, xgpio_in2, xgpio_in3, xgpio_in4, xgpio_in5, xgpio_in6, xgpio_in7, xgpio_in8, xgpio_in9;
 
   xil_printf("Initializing payload container\n\r");
-  int payload_size = 10 * 5;  // 10 packages of 5 ints
+  int payload_size = 10 * 6;  // 10 packages of 6 ints
   int payload[payload_size];
 
   xil_printf("Initializing GPIO\n\r");
@@ -276,6 +276,8 @@ int main() {
 //       printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
 
       // convert to fixed point for sending
+      i1_int = (int32_t)(i1 * 1000); //
+      i2_int = (int32_t)(i2 * 1000); //
       x1d_int = (int32_t)(x1d * 1000); // nm
       x2d_int = (int32_t)(x2d * 1000); // nm
       phase_int = (int32_t)(phase_d * 1000); // pm
@@ -290,6 +292,7 @@ int main() {
       payload[5 * vals_idx + 2] = x2d_int;
       payload[5 * vals_idx + 3] = phase_int;
       payload[5 * vals_idx + 4] = i1_int;
+      payload[5 * vals_idx + 5] = i2_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
