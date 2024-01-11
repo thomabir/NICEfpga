@@ -162,49 +162,39 @@ module MainSV (
             .NUM_BITS_IN(24),
             .NUM_BITS_OUT(24),
             .CIC_STAGES(5),
-            .CIC_DECIMATION(64),
-            .COEFF_LENGTH(35)
+            .CIC_DECIMATION(16),
+            .COEFF_LENGTH(25)
         ) dut (
             .clk_i(clk_i),
             .reset_i(reset_i),
             .tick_i(start_i),
             .data_i(signal_i),
             .coeff({
-                -31169,
-                -9121,
-                76197,
-                -3349,
-                -11598,
-                -11000,
-                -253450,
-                196602,
-                439660,
-                -429613,
-                -25453,
-                27321,
-                -936724,
-                1589593,
-                1466231,
-                -3765200,
-                -726342,
-                4803777,
-                -726342,
-                -3765200,
-                1466231,
-                1589593,
-                -936724,
-                27321,
-                -25453,
-                -429613,
-                439660,
-                196602,
-                -253450,
-                -11000,
-                -11598,
-                -3349,
-                76197,
-                -9121,
-                -31169
+                -111761,
+                3923,
+                333871,
+                -67106,
+                -354581,
+                213822,
+                -333103,
+                -367217,
+                1856848,
+                374568,
+                -3537164,
+                -160702,
+                4277397,
+                -160702,
+                -3537164,
+                374568,
+                1856848,
+                -367217,
+                -333103,
+                213822,
+                -354581,
+                -67106,
+                333871,
+                3923,
+                -111761
             }),
             .data_o(signal_o),
             .done_o(done_o)
@@ -248,7 +238,7 @@ module MainSV (
 
 
 
-    // Hilbert transformer to phase shift position modulation sine to make it cosine
+    // Hilbert transformer to phase shift 100 Hz sin to make it cos
     logic signed [23:0] sin100;
     logic signed [23:0] cos100;
     logic hilbert_done;
