@@ -213,7 +213,7 @@ module MainSV (
         .clk_i(clk),
         .reset_i(reset),
         .start_i(adc_tick_o),
-        .signal_i(adc1_o * 8),
+        .signal_i(adc1_o),
         .signal_o(ifilt1_o),
         .done_o(tick_ifilt_o)
     );
@@ -222,7 +222,7 @@ module MainSV (
         .clk_i(clk),
         .reset_i(reset),
         .start_i(adc_tick_o),
-        .signal_i(adc2_o * 8),
+        .signal_i(adc2_o),
         .signal_o(ifilt2_o),
         .done_o()
     );
@@ -231,7 +231,7 @@ module MainSV (
         .clk_i(clk),
         .reset_i(reset),
         .start_i(adc_tick_o),
-        .signal_i(adc3_o * 8),
+        .signal_i(adc3_o),
         .signal_o(ifilt3_o),
         .done_o()
     );
