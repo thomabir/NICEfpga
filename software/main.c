@@ -287,12 +287,12 @@ int main() {
       // payload[2 * vals_idx + 1] = phase_int;
 
       // store count_pos and adc readings in payload
-      payload[5 * vals_idx] = count_pos;
-      payload[5 * vals_idx + 1] = x1_int;
-      payload[5 * vals_idx + 2] = x2_int;
-      payload[5 * vals_idx + 3] = phase_int;
-      payload[5 * vals_idx + 4] = i1_int;
-      payload[5 * vals_idx + 5] = i2_int;
+      payload[6 * vals_idx] = count_pos;
+      payload[6 * vals_idx + 1] = x1_int;
+      payload[6 * vals_idx + 2] = x2_int;
+      payload[6 * vals_idx + 3] = phase_int;
+      payload[6 * vals_idx + 4] = i1_int;
+      payload[6 * vals_idx + 5] = i2_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
