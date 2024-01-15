@@ -228,16 +228,16 @@ int main() {
 //      printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
 
       // cast to doubles
-      x1 = (double)x1_int;  // x1
-      i1 = (double)i1_int;  // i1
-      x2 = (double)x2_int;  // x2
-      i2 = (double)i2_int;  // i2
+      // x1 = (double)x1_int;  // x1
+      // i1 = (double)i1_int;  // i1
+//      x2 = (double)x2_int;  // x2
+//      i2 = (double)i2_int;  // i2
       x_opd = (double)x_opd_int;
       y_opd = (double)y_opd_int;
 
       // calculate the positions: xn = xn/in
-      x1d = x1 / i1;
-      x2d = x2 / i2;
+//      x1d = x1; /// i1;
+//      x2d = x2; // / i2;
 
       // calculate the phase using atan2
       phase_d = -atan2(y_opd, x_opd);
@@ -269,17 +269,17 @@ int main() {
       phase_d = phase_d * 632.8 / 360;
 
       // convert pos to um
-      x1d = x1d * 1.11e3;
-      x2d = x2d * 1.11e3;
+//      x1d = x1d;// * 1.11e3;
+//      x2d = x2d;// * 1.11e3;
 
       // print floats
 //       printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
 
       // convert to fixed point for sending
-      i1_int = (int32_t)(i1 * 1000); //
-      i2_int = (int32_t)(i2 * 1000); //
-      x1d_int = (int32_t)(x1d * 1000); // nm
-      x2d_int = (int32_t)(x2d * 1000); // nm
+//      i1_int = (int32_t)(i1 * 1000); //
+//      i2_int = (int32_t)(i2 * 1000); //
+//      x1d_int = (int32_t)(x1d * 1000); // nm
+//      x2d_int = (int32_t)(x2d * 1000); // nm
       phase_int = (int32_t)(phase_d * 1000); // pm
 
       // store count_pos and phase_int in payload
@@ -288,8 +288,8 @@ int main() {
 
       // store count_pos and adc readings in payload
       payload[5 * vals_idx] = count_pos;
-      payload[5 * vals_idx + 1] = x1d_int;
-      payload[5 * vals_idx + 2] = x2d_int;
+      payload[5 * vals_idx + 1] = x1_int;
+      payload[5 * vals_idx + 2] = x2_int;
       payload[5 * vals_idx + 3] = phase_int;
       payload[5 * vals_idx + 4] = i1_int;
       payload[5 * vals_idx + 5] = i2_int;
