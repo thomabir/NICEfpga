@@ -26,6 +26,7 @@ repos:
             - --variable-naming-style=any
             - --const-naming-style=any
             - --argument-naming-style=any
+            - --module-naming-style=any
             - --ignore-long-lines=^\s*(#\s*)?<?https?://\S+>?$
             # - --disable=C,R,E0401
             - --disable=C0301
