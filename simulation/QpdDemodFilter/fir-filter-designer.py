@@ -21,6 +21,7 @@ f1 = 0
 f2 = 10
 stopband_freq = 50
 num_stages_fir_filter = 41
+n_bits = 48
 
 f = np.linspace(0, fs / 2, 1000)
 
@@ -54,7 +55,7 @@ ax.set_title("Filter response")
 ax.set_ylabel("Gain")
 ax.set_xlabel("Frequency (Hz)")
 ax.legend()
-fig.savefig("filter-response-lin.pdf", bbox_inches="tight")
+# fig.savefig("filter-response-lin.pdf", bbox_inches="tight")
 # plt.show()
 
 # log plot of filter response
@@ -68,7 +69,7 @@ ax.set_ylabel("Gain")
 ax.set_xlabel("Frequency (Hz)")
 ax.set_yscale("log")
 ax.legend()
-fig.savefig("filter-response-log.pdf", bbox_inches="tight")
+# fig.savefig("filter-response-log.pdf", bbox_inches="tight")
 # plt.show()
 
 # linear plot of filter response
@@ -84,8 +85,8 @@ fig.savefig("filter-response-log.pdf", bbox_inches="tight")
 # plt.show()
 
 
-# scale coefficients to 24 bit ints
-fir_filter = fir_filter * 2**23 - 1
+# scale coefficients to n_bits
+fir_filter = fir_filter * (2 ** (n_bits - 1) - 1)
 fir_filter = np.round(fir_filter).astype(int)
 
 # print scaled coefficients
@@ -93,5 +94,5 @@ fir_filter = np.round(fir_filter).astype(int)
 print("Scaled FIR filter coefficients:")
 print("'{", end="")
 for i in range(len(fir_filter) - 1):
-    print(f"{fir_filter[i]}, ", end="")
-print(f"{fir_filter[-1]}}}")
+    print(f"{n_bits}'d{fir_filter[i]}, ", end="")
+print(f"{n_bits}'d{fir_filter[-1]}}}")

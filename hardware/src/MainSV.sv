@@ -296,10 +296,10 @@ module MainSV (
 
 
     // lock-in amplifier
-    logic signed [23:0] x1;
-    logic signed [23:0] x2;
-    logic signed [23:0] i1;
-    logic signed [23:0] i2;
+    logic signed [47:0] x1;
+    logic signed [47:0] x2;
+    logic signed [47:0] i1;
+    logic signed [47:0] i2;
     logic demod_done_o;
 
     QpdDemodulator demod (
@@ -341,10 +341,11 @@ module MainSV (
     end
 
 
-    assign oreg1 = x1;
-    assign oreg2 = i1;
-    assign oreg3 = x2;
-    assign oreg4 = i2;
+    // send only the 32 MSBs, as that is the max width of the AXI GPIO interface
+    assign oreg1 = x1[47:16];
+    assign oreg2 = i1[47:16];
+    assign oreg3 = x2[47:16];
+    assign oreg4 = i2[47:16];
     assign oreg5 = x_opd;
     assign oreg6 = y_opd;
     assign oreg_count_pos = counter_pos;
