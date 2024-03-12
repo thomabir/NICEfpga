@@ -16,7 +16,7 @@ if not os.path.exists(plot_dir):
     os.makedirs(plot_dir)
 
 
-fs = 64e3  # sampling frequency, Hz
+fs = 128e3  # sampling frequency, Hz
 f1 = 5e3  # start of passband, Hz
 f2 = 15e3  # end of passband, Hz
 
@@ -34,7 +34,7 @@ weight[(f >= 20e3)] = 1
 # remove every second element from weight
 weight_bands = weight[::2]
 
-num_stages_fir_filter = 21
+num_stages_fir_filter = 41
 
 # use firls to design the filter
 fir_filter = sig.firls(num_stages_fir_filter, f, desired_gain, weight_bands, fs=fs)
