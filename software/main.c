@@ -266,7 +266,7 @@ int main() {
       // printf("%d\n\r", phase_int);
 
       // convert to nm
-      phase_d = phase_d * 632.8 / 360;
+      phase_d = phase_d * 1550 / 360;
 
       // convert pos to um
 //      x1d = x1d;// * 1.11e3;
@@ -317,8 +317,8 @@ int main() {
         // increase the package number
         pkg_no++;
 
-        // print every 64k readings
-        if (pkg_no % 6400 == 0) {
+        // print every 128k readings (= 1s)
+        if (pkg_no % 12800 == 0) {
           xil_printf("*");
         }
       } else {
