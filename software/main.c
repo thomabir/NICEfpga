@@ -73,7 +73,7 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 248);  // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 246);  // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -104,57 +104,54 @@ int main() {
     xil_printf("Error in start_application() with code: %d\n\r", status);
   }
 
+  // structure of data to be sent to PC:
+  // (excluding overhead)
+
+  // C0: 128 kHz sampling rate x 10 channels x 32 bits = 40.96 Mbit/s
+  // these are the raw measurements, for debugging
+
+  // C1: 8 kHz sampling rate x 1 channels x 32 bit = 256 kbit/s
+  // OPD measurement
+
+  // C2: 1 kHz x 8 ch x 32 bits = 256 kbit/s
+  // shear: x1, y1, x2, y2
+  // pointing: alpha1, beta1, alpha2, beta2
+
+
+  // test data:
+  // C0: 128 kHz sampling rate x 2 channel x 32 bits
+  // + 1 x 32 bit counter
+  // = 3 channels
+
+
+  xil_printf("Initializing payload containers\n\r");
+  // max payload size: 1500 bytes = 12000 bits = 375 int (32 bits each)
+  const int num_channels = 3;
+  const int num_timepoints = 10;
+  int payload_size = num_channels * num_timepoints;
+  int payload[payload_size];
   int pkg_no = 0;
   int vals_idx = 0;
 
+
   // current AXI GPIO setup:
-  // gpio0 -> count_pos
-  // gpio1 -> x1
-  // gpio2 -> i1
-  // gpio3 -> x2
-  // gpio4 -> i2
-  // gpio5 -> x_opd
-  // gpio6 -> y_opd
-  // gpio7 -> NC
-  // gpio8 -> NC
-  // gpio9 -> count_opd
+  // gpio0 -> sync
+  // gpio1 -> (OPD_x, OPD_y)
 
-  XGpio xgpio_in0, xgpio_in1, xgpio_in2, xgpio_in3, xgpio_in4, xgpio_in5, xgpio_in6, xgpio_in7, xgpio_in8, xgpio_in9;
+  
 
-  xil_printf("Initializing payload container\n\r");
-  int payload_size = 10 * 6;  // 10 packages of 6 ints
-  int payload[payload_size];
 
+
+  // activate the GPIOs, two channels each, data direction: read
   xil_printf("Initializing GPIO\n\r");
-  XGpio_Initialize(&xgpio_in0, XPAR_AXI_GPIO_0_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in0, 1, 1);
+  const int num_xgpio_instances = 10;
+  XGpio xgpio_in[num_xgpio_instances];
 
-  XGpio_Initialize(&xgpio_in1, XPAR_AXI_GPIO_1_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in1, 1, 1);
-
-  XGpio_Initialize(&xgpio_in2, XPAR_AXI_GPIO_2_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in2, 1, 1);
-
-  XGpio_Initialize(&xgpio_in3, XPAR_AXI_GPIO_3_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in3, 1, 1);
-
-  XGpio_Initialize(&xgpio_in4, XPAR_AXI_GPIO_4_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in4, 1, 1);
-
-  XGpio_Initialize(&xgpio_in5, XPAR_AXI_GPIO_5_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in5, 1, 1);
-
-  XGpio_Initialize(&xgpio_in6, XPAR_AXI_GPIO_6_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in6, 1, 1);
-
-  XGpio_Initialize(&xgpio_in7, XPAR_AXI_GPIO_7_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in7, 1, 1);
-
-  XGpio_Initialize(&xgpio_in8, XPAR_AXI_GPIO_8_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in8, 1, 1);
-
-  XGpio_Initialize(&xgpio_in9, XPAR_AXI_GPIO_9_DEVICE_ID);
-  XGpio_SetDataDirection(&xgpio_in9, 1, 1);
+  for (int i = 0; i < num_xgpio_instances; i++) {
+      XGpio_Initialize(&xgpio_in[i], XPAR_AXI_GPIO_0_DEVICE_ID + i); // works in practice
+      XGpio_SetDataDirection(&xgpio_in[i], 1, 1); // (instance pointer, channel, direction mask)
+      XGpio_SetDataDirection(&xgpio_in[i], 2, 1);
+  }
 
   /* receive and process packets */
 
@@ -205,10 +202,13 @@ int main() {
 
   while (1) {
     // Get the current value of the count_pos
-    count_pos = XGpio_DiscreteRead(&xgpio_in0, 1);
-    count_opd = XGpio_DiscreteRead(&xgpio_in9, 1);
+    count_opd = XGpio_DiscreteRead(&xgpio_in[0], 1);
 
-    //     printf("%d\n\r", count_pos);
+    // printf("%d\n\r", count_opd);
+
+    // x_opd_int = XGpio_DiscreteRead(&xgpio_in1, 1);
+    // printf("%d\n\r", x_opd_int);
+
 
     // if the count_pos is exactly 1 higher than the previous count_pos, we have a new value, and we perform the
     // processing. Otherwise, wait 10 us and try again
@@ -216,28 +216,28 @@ int main() {
 
     // calculate position and send
     if (count_opd == prev_count_opd + 1) {
-    // if (1) {
-      x1_int = XGpio_DiscreteRead(&xgpio_in1, 1);
-      i1_int = XGpio_DiscreteRead(&xgpio_in2, 1);
-      x2_int = XGpio_DiscreteRead(&xgpio_in3, 1);
-      i2_int = XGpio_DiscreteRead(&xgpio_in4, 1);
-      x_opd_int = XGpio_DiscreteRead(&xgpio_in5, 1);
-      y_opd_int = XGpio_DiscreteRead(&xgpio_in6, 1);
+      // if (1) {
+      // x1_int = XGpio_DiscreteRead(&xgpio_in[1], 1);
+      // i1_int = XGpio_DiscreteRead(&xgpio_in[2], 1);
+      // x2_int = XGpio_DiscreteRead(&xgpio_in[3], 1);
+      // i2_int = XGpio_DiscreteRead(&xgpio_in[4], 1);
+      x_opd_int = XGpio_DiscreteRead(&xgpio_in[1], 1);
+      y_opd_int = XGpio_DiscreteRead(&xgpio_in[1], 2);
 
       // print raw values
-//      printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
+      // printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
 
       // cast to doubles
       // x1 = (double)x1_int;  // x1
       // i1 = (double)i1_int;  // i1
-//      x2 = (double)x2_int;  // x2
-//      i2 = (double)i2_int;  // i2
+      // x2 = (double)x2_int;  // x2
+      // i2 = (double)i2_int;  // i2
       x_opd = (double)x_opd_int;
       y_opd = (double)y_opd_int;
 
       // calculate the positions: xn = xn/in
-//      x1d = x1; /// i1;
-//      x2d = x2; // / i2;
+      // x1d = x1; /// i1;
+      // x2d = x2; // / i2;
 
       // calculate the phase using atan2
       phase_d = -atan2(y_opd, x_opd);
@@ -255,50 +255,45 @@ int main() {
       // set the previous phase to the current phase
       prev_phase_d = phase_d;
 
-
-      // print x1_int
       // printf("%d\n\r", x1_int);
 
-      // print using printf
-//       printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
+      // printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
+      // printf("phase: %f\n\r", phase_d);
 
-      // print phase_int
+
       // printf("%d\n\r", phase_int);
 
       // convert to nm
       phase_d = phase_d * 1550 / 360;
 
       // convert pos to um
-//      x1d = x1d;// * 1.11e3;
-//      x2d = x2d;// * 1.11e3;
+      // x1d = x1d;// * 1.11e3;
+      // x2d = x2d;// * 1.11e3;
 
       // print floats
-//       printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
+      // printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
 
       // convert to fixed point for sending
-//      i1_int = (int32_t)(i1 * 1000); //
-//      i2_int = (int32_t)(i2 * 1000); //
-//      x1d_int = (int32_t)(x1d * 1000); // nm
-//      x2d_int = (int32_t)(x2d * 1000); // nm
-      phase_int = (int32_t)(phase_d * 1000); // pm
+      // i1_int = (int32_t)(i1 * 1000); //
+      // i2_int = (int32_t)(i2 * 1000); //
+      // x1d_int = (int32_t)(x1d * 1000); // nm
+      // x2d_int = (int32_t)(x2d * 1000); // nm
+      phase_int = (int32_t)(phase_d * 1000);  // pm
 
       // store count_pos and phase_int in payload
       // payload[2 * vals_idx] = count_pos;
       // payload[2 * vals_idx + 1] = phase_int;
 
       // store count_pos and adc readings in payload
-      payload[6 * vals_idx] = count_pos;
-      payload[6 * vals_idx + 1] = x1_int;
-      payload[6 * vals_idx + 2] = x2_int;
-      payload[6 * vals_idx + 3] = phase_int;
-      payload[6 * vals_idx + 4] = i1_int;
-      payload[6 * vals_idx + 5] = i2_int;
+      payload[num_channels * vals_idx] = count_opd;
+      payload[num_channels * vals_idx + 1] = x_opd_int;
+      payload[num_channels * vals_idx + 2] = y_opd_int;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
       xemacif_input(echo_netif);
 
-      // if phases is full, send a package
+      // if payload is full, send it
       if (vals_idx == 9) {
         // print the package number
         // xil_printf("Package %d\n\r", pkg_no);
@@ -317,7 +312,7 @@ int main() {
         // increase the package number
         pkg_no++;
 
-        // print every 128k readings (= 1s)
+        // print "*" every 128k readings (= 1s)
         if (pkg_no % 12800 == 0) {
           xil_printf("*");
         }
@@ -326,8 +321,7 @@ int main() {
       }
     }
 
-    // set the previous count_pos to the current count_pos
-    prev_count_pos = count_pos;
+    // set the previous counter to the current counter
     prev_count_opd = count_opd;
 
     // usleep(10000);

@@ -3,37 +3,40 @@ module MainSV (
     input logic [1:0] sw_i,
     input logic [3:0] btn_i,
     input logic [7:0] pmodb_i,
-    output logic [7:0] pmoda_o,
+    output logic [7:0] pmoda_i,
     output logic [3:0] led_o,
-    output logic signed [31:0] oreg1,
-    output logic signed [31:0] oreg2,
-    output logic signed [31:0] oreg3,
-    output logic signed [31:0] oreg4,
-    output logic signed [31:0] oreg5,
-    output logic signed [31:0] oreg6,
-    output logic signed [31:0] oreg7,
-    output logic signed [31:0] oreg8,
-    output logic unsigned [31:0] oreg_count_pos,
-    output logic unsigned [31:0] oreg_count_opd
+    output logic signed [31:0] o1,
+    output logic signed [31:0] o2,
+    output logic signed [31:0] o3,
+    output logic signed [31:0] o4,
+    output logic signed [31:0] o5,
+    output logic signed [31:0] o6,
+    output logic signed [31:0] o7,
+    output logic signed [31:0] o8,
+    output logic unsigned [31:0] osync
 );
     // reset
     logic reset;
     assign reset = btn_i[0];
 
-    // ADC reader
-    logic signed [23:0] adc1_o;
-    logic signed [23:0] adc2_o;
-    logic signed [23:0] adc3_o;
-    logic signed [23:0] adc4_o;
-    logic signed [23:0] adc5_o;
-    logic signed [23:0] adc6_o;
-    logic signed [23:0] adc7_o;
-    logic signed [23:0] adc8_o;
+    // ADC1
+    logic signed [23:0] shear1;
+    logic signed [23:0] shear2;
+    logic signed [23:0] shear3;
+    logic signed [23:0] shear4;
+    logic signed [23:0] point1;
+    logic signed [23:0] point2;
+    logic signed [23:0] point3;
+    logic signed [23:0] point4;
+
+    // ADC2
+    logic signed [23:0] sine_ref;
+    logic signed [23:0] opd_ref;
 
 
-    logic adc_tick_o;
+    logic adc1_tick;
 
-    DoutReader reader (
+    DoutReader adc1 (
         .clk_i(clk),
         .reset_i(reset),
         .drdy(pmodb_i[0]),
@@ -42,15 +45,35 @@ module MainSV (
         .din1(pmodb_i[3]),
         .din2(pmodb_i[4]),
         .din3(pmodb_i[5]),
-        .ch1_o(adc1_o),  // 10 kHz ref
-        .ch2_o(adc2_o),  // 10 kHz meas
-        .ch3_o(adc3_o),  // NC
-        .ch4_o(adc4_o),  // NC
-        .ch5_o(adc5_o),  // NC
-        .ch6_o(adc6_o),  // NC
-        .ch7_o(adc7_o),  // NC
-        .ch8_o(adc8_o),  // NC
-        .tick_o(adc_tick_o)
+        .ch1_o(shear1),
+        .ch2_o(shear2),
+        .ch3_o(shear3),
+        .ch4_o(shear4),
+        .ch5_o(point1),
+        .ch6_o(point2),
+        .ch7_o(point3),
+        .ch8_o(point4),
+        .tick_o(adc1_tick)
+    );
+
+    DoutReader adc2 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .drdy(pmoda_i[0]),
+        .dclk(pmoda_i[1]),
+        .din0(pmoda_i[2]),
+        .din1(pmoda_i[3]),
+        .din2(pmoda_i[4]),
+        .din3(pmoda_i[5]),
+        .ch1_o(sine_ref),
+        .ch2_o(opd_ref),
+        .ch3_o(), // NC
+        .ch4_o(), // NC
+        .ch5_o(), // NC
+        .ch6_o(), // NC
+        .ch7_o(), // NC
+        .ch8_o(), // NC
+        .tick_o()
     );
 
     //
@@ -59,7 +82,7 @@ module MainSV (
 
     // add all photocurrents to get the equivalent of a single photodiode
     // logic signed [23:0] sum_opd;
-    // assign sum_opd = adc1_o + adc2_o;
+    // assign sum_opd = shear1 + shear2;
 
     // input filters
     logic signed [23:0] ifilt_sum_opd_o;  // QPD1 + QPD2
@@ -132,8 +155,8 @@ module MainSV (
     OpdInputFilter opdifilt_sum_opd (
         .clk_i  (clk),
         .reset_i(reset),
-        .tick_i (adc_tick_o),
-        .data_i (adc1_o),
+        .tick_i (adc1_tick),
+        .data_i (shear1),
         .data_o (ifilt_sum_opd_o),
         .tick_o (tick_ifilt_opd_o)
     );
@@ -141,8 +164,8 @@ module MainSV (
     OpdInputFilter opdifilt_ref_opd (
         .clk_i  (clk),
         .reset_i(reset),
-        .tick_i (adc_tick_o),
-        .data_i (adc2_o),
+        .tick_i (adc1_tick),
+        .data_i (opd_ref),
         .data_o (ifilt_ref_opd_o),
         .tick_o ()
     );
@@ -232,8 +255,8 @@ module MainSV (
     // QPDInputFilter qpdifilt1 (
     //     .clk_i(clk),
     //     .reset_i(reset),
-    //     .start_i(adc_tick_o),
-    //     .signal_i(adc1_o),
+    //     .start_i(adc1_tick),
+    //     .signal_i(shear1),
     //     .signal_o(ifilt1_o),
     //     .done_o(tick_ifilt_o)
     // );
@@ -241,8 +264,8 @@ module MainSV (
     // QPDInputFilter qpdifilt2 (
     //     .clk_i(clk),
     //     .reset_i(reset),
-    //     .start_i(adc_tick_o),
-    //     .signal_i(adc2_o),
+    //     .start_i(adc1_tick),
+    //     .signal_i(shear2),
     //     .signal_o(ifilt2_o),
     //     .done_o()
     // );
@@ -250,8 +273,8 @@ module MainSV (
     // QPDInputFilter qpdifilt3 (
     //     .clk_i(clk),
     //     .reset_i(reset),
-    //     .start_i(adc_tick_o),
-    //     .signal_i(adc3_o),
+    //     .start_i(adc1_tick),
+    //     .signal_i(shear3),
     //     .signal_o(ifilt3_o),
     //     .done_o()
     // );
@@ -349,13 +372,13 @@ module MainSV (
     //     end
     // end
 
-    // A counter that increases every time the OPD signals are updated
-    logic unsigned [31:0] counter_opd;
+    // A counter that increases every time the ADC is read
+    logic unsigned [32:0] counter_opd;
     always_ff @(posedge clk) begin
         if (reset) begin
             counter_opd <= 0;
         end
-        else if (opd_done_o) begin
+        else if (adc1_tick) begin
             counter_opd <= counter_opd + 1;
         end
     end
@@ -366,8 +389,7 @@ module MainSV (
     // assign oreg2 = i1[47:16];
     // assign oreg3 = x2[47:16];
     // assign oreg4 = i2[47:16];
-    assign oreg5 = x_opd;
-    assign oreg6 = y_opd;
-    // assign oreg_count_pos = counter_pos;
-    assign oreg_count_opd = counter_opd;
+    assign o1 = shear1;
+    assign o2 = opd_ref;
+    assign osync = counter_opd;
 endmodule

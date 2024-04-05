@@ -21,29 +21,28 @@ set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS18} [get_ports {led[3]}];
 
 ## Pmoda
 ## RPi GPIO 7-0 are shared with pmoda_rpi_gpio_tri_io[7:0]
-set_property -dict {PACKAGE_PIN Y18 IOSTANDARD LVCMOS18} [get_ports {spi0_sclk}];
-set_property -dict {PACKAGE_PIN Y19 IOSTANDARD LVCMOS18} [get_ports {spi0_mosi}];
-set_property -dict {PACKAGE_PIN Y16 IOSTANDARD LVCMOS18} [get_ports {spi0_miso}];
-set_property -dict {PACKAGE_PIN Y17 IOSTANDARD LVCMOS18} [get_ports {spi0_ss}];
-
-set_property -dict {PACKAGE_PIN U19 IOSTANDARD LVCMOS18} [get_ports {pmoda[5]}];
+set_property -dict {PACKAGE_PIN Y18 IOSTANDARD LVCMOS18} [get_ports {pmoda[0]}];
+set_property -dict {PACKAGE_PIN Y19 IOSTANDARD LVCMOS18} [get_ports {pmoda[1]}];
+set_property -dict {PACKAGE_PIN Y16 IOSTANDARD LVCMOS18} [get_ports {pmoda[2]}];
+set_property -dict {PACKAGE_PIN Y17 IOSTANDARD LVCMOS18} [get_ports {pmoda[3]}];
 set_property -dict {PACKAGE_PIN U18 IOSTANDARD LVCMOS18} [get_ports {pmoda[4]}];
-set_property -dict {PACKAGE_PIN W19 IOSTANDARD LVCMOS18} [get_ports {pmoda[7]}];
+set_property -dict {PACKAGE_PIN U19 IOSTANDARD LVCMOS18} [get_ports {pmoda[5]}];
 set_property -dict {PACKAGE_PIN W18 IOSTANDARD LVCMOS18} [get_ports {pmoda[6]}];
+set_property -dict {PACKAGE_PIN W19 IOSTANDARD LVCMOS18} [get_ports {pmoda[7]}];
 set_property PULLUP true [get_ports {pmoda[2]}];
 set_property PULLUP true [get_ports {pmoda[3]}];
 set_property PULLUP true [get_ports {pmoda[6]}];
 set_property PULLUP true [get_ports {pmoda[7]}];
 
 ## Pmodb
-set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS18} [get_ports {pmodb[1]}];
 set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS18} [get_ports {pmodb[0]}];
-set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS18} [get_ports {pmodb[3]}];
+set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS18} [get_ports {pmodb[1]}];
 set_property -dict {PACKAGE_PIN T11 IOSTANDARD LVCMOS18} [get_ports {pmodb[2]}];
-set_property -dict {PACKAGE_PIN W16 IOSTANDARD LVCMOS18} [get_ports {pmodb[5]}];
+set_property -dict {PACKAGE_PIN T10 IOSTANDARD LVCMOS18} [get_ports {pmodb[3]}];
 set_property -dict {PACKAGE_PIN V16 IOSTANDARD LVCMOS18} [get_ports {pmodb[4]}];
-set_property -dict {PACKAGE_PIN W13 IOSTANDARD LVCMOS18} [get_ports {pmodb[7]}];
+set_property -dict {PACKAGE_PIN W16 IOSTANDARD LVCMOS18} [get_ports {pmodb[5]}];
 set_property -dict {PACKAGE_PIN V12 IOSTANDARD LVCMOS18} [get_ports {pmodb[6]}];
+set_property -dict {PACKAGE_PIN W13 IOSTANDARD LVCMOS18} [get_ports {pmodb[7]}];
 set_property PULLUP true [get_ports {pmodb[2]}];
 set_property PULLUP true [get_ports {pmodb[3]}];
 set_property PULLUP true [get_ports {pmodb[6]}];
