@@ -3,7 +3,7 @@ module MainSV (
     input logic [1:0] sw_i,
     input logic [3:0] btn_i,
     input logic [7:0] pmodb_i,
-    output logic [7:0] pmoda_i,
+    input logic [7:0] pmoda_i,
     output logic [3:0] led_o,
     output logic signed [31:0] o1,
     output logic signed [31:0] o2,
@@ -165,7 +165,7 @@ module MainSV (
         .clk_i  (clk),
         .reset_i(reset),
         .tick_i (adc1_tick),
-        .data_i (opd_ref),
+        .data_i (shear2),
         .data_o (ifilt_ref_opd_o),
         .tick_o ()
     );

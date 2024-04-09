@@ -3,7 +3,7 @@ module MainV(
     input [1:0] sw,
     input [3:0] btn,
     input [7:0] pmodb,
-    output [7:0] pmoda,
+    input [7:0] pmoda,
     output [3:0] led,
     output [31:0] o1,
     output [31:0] o2,

@@ -222,7 +222,7 @@ int main() {
       // x2_int = XGpio_DiscreteRead(&xgpio_in[3], 1);
       // i2_int = XGpio_DiscreteRead(&xgpio_in[4], 1);
       x_opd_int = XGpio_DiscreteRead(&xgpio_in[1], 1);
-      y_opd_int = XGpio_DiscreteRead(&xgpio_in[1], 2);
+      y_opd_int = XGpio_DiscreteRead(&xgpio_in[2], 1);
 
       // print raw values
       // printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
