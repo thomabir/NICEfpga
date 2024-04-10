@@ -5,37 +5,32 @@ module MainSV (
     input logic [7:0] pmodb_i,
     input logic [7:0] pmoda_i,
     output logic [3:0] led_o,
-    output logic signed [31:0] o1,
-    output logic signed [31:0] o2,
-    output logic signed [31:0] o3,
-    output logic signed [31:0] o4,
-    output logic signed [31:0] o5,
-    output logic signed [31:0] o6,
-    output logic signed [31:0] o7,
-    output logic signed [31:0] o8,
-    output logic unsigned [31:0] osync
+
+    // ADC raw data
+    output logic signed [31:0] adc_shear1,
+    output logic signed [31:0] adc_shear2,
+    output logic signed [31:0] adc_shear3,
+    output logic signed [31:0] adc_shear4,
+    output logic signed [31:0] adc_point1,
+    output logic signed [31:0] adc_point2,
+    output logic signed [31:0] adc_point3,
+    output logic signed [31:0] adc_point4,
+    output logic signed [31:0] adc_sine_ref,
+    output logic signed [31:0] adc_opd_ref,
+
+    // processed data
+    output logic signed [31:0] opd_x,
+    output logic signed [31:0] opd_y,
+
+    // clock counters for synchronization
+    output logic unsigned [32:0] osync
 );
     // reset
     logic reset;
     assign reset = btn_i[0];
 
     // ADC1
-    logic signed [23:0] shear1;
-    logic signed [23:0] shear2;
-    logic signed [23:0] shear3;
-    logic signed [23:0] shear4;
-    logic signed [23:0] point1;
-    logic signed [23:0] point2;
-    logic signed [23:0] point3;
-    logic signed [23:0] point4;
-
-    // ADC2
-    logic signed [23:0] sine_ref;
-    logic signed [23:0] opd_ref;
-
-
     logic adc1_tick;
-
     DoutReader adc1 (
         .clk_i(clk),
         .reset_i(reset),
@@ -45,17 +40,18 @@ module MainSV (
         .din1(pmodb_i[3]),
         .din2(pmodb_i[4]),
         .din3(pmodb_i[5]),
-        .ch1_o(shear1),
-        .ch2_o(shear2),
-        .ch3_o(shear3),
-        .ch4_o(shear4),
-        .ch5_o(point1),
-        .ch6_o(point2),
-        .ch7_o(point3),
-        .ch8_o(point4),
+        .ch1_o(adc_shear1),
+        .ch2_o(adc_shear2),
+        .ch3_o(adc_shear3),
+        .ch4_o(adc_shear4),
+        .ch5_o(adc_point1),
+        .ch6_o(adc_point2),
+        .ch7_o(adc_point3),
+        .ch8_o(adc_point4),
         .tick_o(adc1_tick)
     );
 
+    // ADC2
     DoutReader adc2 (
         .clk_i(clk),
         .reset_i(reset),
@@ -65,8 +61,8 @@ module MainSV (
         .din1(pmoda_i[3]),
         .din2(pmoda_i[4]),
         .din3(pmoda_i[5]),
-        .ch1_o(sine_ref),
-        .ch2_o(opd_ref),
+        .ch1_o(adc_sine_ref),
+        .ch2_o(adc_opd_ref),
         .ch3_o(), // NC
         .ch4_o(), // NC
         .ch5_o(), // NC
@@ -156,7 +152,7 @@ module MainSV (
         .clk_i  (clk),
         .reset_i(reset),
         .tick_i (adc1_tick),
-        .data_i (shear1),
+        .data_i (adc_shear1),
         .data_o (ifilt_sum_opd_o),
         .tick_o (tick_ifilt_opd_o)
     );
@@ -165,14 +161,12 @@ module MainSV (
         .clk_i  (clk),
         .reset_i(reset),
         .tick_i (adc1_tick),
-        .data_i (shear2),
+        .data_i (adc_opd_ref),
         .data_o (ifilt_ref_opd_o),
         .tick_o ()
     );
 
     // lock-in amplifier
-    logic signed [23:0] x_opd;
-    logic signed [23:0] y_opd;
     logic opd_done_o;
 
     LockInAmplifier opd_lockin (
@@ -181,8 +175,8 @@ module MainSV (
         .tick_i(tick_ifilt_opd_o),
         .ch1_i(ifilt_ref_opd_o),
         .ch2_i(ifilt_sum_opd_o),
-        .x_o(x_opd),
-        .y_o(y_opd),
+        .x_o(opd_x),
+        .y_o(opd_y),
         .done_o(opd_done_o)
     );
 
@@ -389,7 +383,5 @@ module MainSV (
     // assign oreg2 = i1[47:16];
     // assign oreg3 = x2[47:16];
     // assign oreg4 = i2[47:16];
-    assign o1 = shear1;
-    assign o2 = opd_ref;
     assign osync = counter_opd;
 endmodule

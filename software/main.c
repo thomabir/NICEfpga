@@ -126,7 +126,7 @@ int main() {
 
   xil_printf("Initializing payload containers\n\r");
   // max payload size: 1500 bytes = 12000 bits = 375 int (32 bits each)
-  const int num_channels = 3;
+  const int num_channels = 12;
   const int num_timepoints = 10;
   int payload_size = num_channels * num_timepoints;
   int payload[payload_size];
@@ -184,48 +184,57 @@ int main() {
   send_pcb = *pcb;
 
   // counters
-  int32_t count_pos, prev_count_pos, count_opd, prev_count_opd, phase_int;
+  int32_t count_opd, prev_count_opd;
 
-  // fpga signals
-  int32_t x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int;
+  // fpga: adc measurements
+  int32_t adc_shear1, adc_shear2, adc_shear3, adc_shear4; // shear
+  int32_t adc_point1, adc_point2, adc_point3, adc_point4; // pointing
+  int32_t adc_sine_ref, adc_opd_ref; // references
 
-  // derived values
-  double x1, i1, x2, i2, x_opd, y_opd, phase_d, prev_phase_d;
+  // fpga: processed data
+  int32_t x_opd_int, y_opd_int;
+  // int32_t x1_int, i1_int, x2_int, i2_int;
 
-  double x1d, x2d;           // corrected x and y positions
-  int32_t x1d_int, x2d_int;  // corrected x and y positions
+  // intermediate variables
+  double x_opd, y_opd, phase_d, prev_phase_d;
+  // double x1, i1, x2, i2;
+  // double x1d, x2d;           // corrected x and y positions
+  
 
-  prev_count_pos = 0;
+  // outputs to be sent to PC
+  int32_t phase_rad_int;
+  // int32_t x1d_int, x2d_int;  // corrected x and y positions
+  
   prev_count_opd = 0;
 
   xil_printf("Starting loop\n\r");
 
   while (1) {
-    // Get the current value of the count_pos
+    // Get counter from FPGA
     count_opd = XGpio_DiscreteRead(&xgpio_in[0], 1);
-
     // printf("%d\n\r", count_opd);
 
-    // x_opd_int = XGpio_DiscreteRead(&xgpio_in1, 1);
-    // printf("%d\n\r", x_opd_int);
-
-
-    // if the count_pos is exactly 1 higher than the previous count_pos, we have a new value, and we perform the
-    // processing. Otherwise, wait 10 us and try again
-    // TODO use interrupts for this
-
-    // calculate position and send
+    // if the counter has incremented, read the values
     if (count_opd == prev_count_opd + 1) {
-      // if (1) {
-      // x1_int = XGpio_DiscreteRead(&xgpio_in[1], 1);
-      // i1_int = XGpio_DiscreteRead(&xgpio_in[2], 1);
-      // x2_int = XGpio_DiscreteRead(&xgpio_in[3], 1);
-      // i2_int = XGpio_DiscreteRead(&xgpio_in[4], 1);
-      x_opd_int = XGpio_DiscreteRead(&xgpio_in[1], 1);
-      y_opd_int = XGpio_DiscreteRead(&xgpio_in[2], 1);
 
-      // print raw values
-      // printf("     %d, %d, %d, %d, %d, %d\n\r", x1_int, i1_int, x2_int, i2_int, x_opd_int, y_opd_int);
+      // read the values from the FPGA
+      adc_shear1 = XGpio_DiscreteRead(&xgpio_in[1], 1);
+      adc_shear2 = XGpio_DiscreteRead(&xgpio_in[1], 2);
+      adc_shear3 = XGpio_DiscreteRead(&xgpio_in[2], 1);
+      adc_shear4 = XGpio_DiscreteRead(&xgpio_in[2], 2);
+
+      adc_point1 = XGpio_DiscreteRead(&xgpio_in[3], 1);
+      adc_point2 = XGpio_DiscreteRead(&xgpio_in[3], 2);
+      adc_point3 = XGpio_DiscreteRead(&xgpio_in[4], 1);
+      adc_point4 = XGpio_DiscreteRead(&xgpio_in[4], 2);
+
+      adc_sine_ref = XGpio_DiscreteRead(&xgpio_in[5], 1);
+      adc_opd_ref = XGpio_DiscreteRead(&xgpio_in[5], 2);
+
+      x_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 1);
+      y_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 2);
+
+      // printf("%d, %d\n\r", x_opd_int, y_opd_int);
 
       // cast to doubles
       // x1 = (double)x1_int;  // x1
@@ -242,14 +251,17 @@ int main() {
       // calculate the phase using atan2
       phase_d = -atan2(y_opd, x_opd);
 
-      // convert from rad to deg
-      phase_d = phase_d * 180. / PI;
+      // print phased
+      // printf("%f\n\r", phase_d);
 
-      // unwrap the phase
-      if (phase_d < prev_phase_d - 180) {
-        phase_d += 360;
-      } else if (phase_d > prev_phase_d + 180) {
-        phase_d -= 360;
+      // convert from rad to deg
+      // phase_d = phase_d * 180. / PI;
+
+      // unwrap the phase (rad)
+      if (phase_d < prev_phase_d - PI) {
+        phase_d += 2 * PI;
+      } else if (phase_d > prev_phase_d + PI) {
+        phase_d -= 2 * PI;
       }
 
       // set the previous phase to the current phase
@@ -264,7 +276,7 @@ int main() {
       // printf("%d\n\r", phase_int);
 
       // convert to nm
-      phase_d = phase_d * 1550 / 360;
+      // phase_d = phase_d * 1550 / 360;
 
       // convert pos to um
       // x1d = x1d;// * 1.11e3;
@@ -278,16 +290,32 @@ int main() {
       // i2_int = (int32_t)(i2 * 1000); //
       // x1d_int = (int32_t)(x1d * 1000); // nm
       // x2d_int = (int32_t)(x2d * 1000); // nm
-      phase_int = (int32_t)(phase_d * 1000);  // pm
+      phase_rad_int = (int32_t)(phase_d * 10000);  // 0.1 mrad = 0.006 deg precision
 
       // store count_pos and phase_int in payload
       // payload[2 * vals_idx] = count_pos;
       // payload[2 * vals_idx + 1] = phase_int;
 
+      // printf("%d\n\r", count_opd);
+
       // store count_pos and adc readings in payload
       payload[num_channels * vals_idx] = count_opd;
-      payload[num_channels * vals_idx + 1] = x_opd_int;
-      payload[num_channels * vals_idx + 2] = y_opd_int;
+
+      payload[num_channels * vals_idx + 1] = adc_shear1;
+      payload[num_channels * vals_idx + 2] = adc_shear2;
+      payload[num_channels * vals_idx + 3] = adc_shear3;
+      payload[num_channels * vals_idx + 4] = adc_shear4;
+
+      payload[num_channels * vals_idx + 5] = adc_point1;
+      payload[num_channels * vals_idx + 6] = adc_point2;
+      payload[num_channels * vals_idx + 7] = adc_point3;
+      payload[num_channels * vals_idx + 8] = adc_point4;
+
+      payload[num_channels * vals_idx + 9] = adc_sine_ref;
+      payload[num_channels * vals_idx + 10] = adc_opd_ref;
+
+      payload[num_channels * vals_idx + 11] = phase_rad_int;
+
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working

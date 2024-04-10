@@ -5,14 +5,21 @@ module MainV(
     input [7:0] pmodb,
     input [7:0] pmoda,
     output [3:0] led,
-    output [31:0] o1,
-    output [31:0] o2,
-    output [31:0] o3,
-    output [31:0] o4,
-    output [31:0] o5,
-    output [31:0] o6,
-    output [31:0] o7,
-    output [31:0] o8,
+
+    output [31:0] adc_shear1,
+    output [31:0] adc_shear2,
+    output [31:0] adc_shear3,
+    output [31:0] adc_shear4,
+    output [31:0] adc_point1,
+    output [31:0] adc_point2,
+    output [31:0] adc_point3,
+    output [31:0] adc_point4,
+    output [31:0] adc_sine_ref,
+    output [31:0] adc_opd_ref,
+
+    output [31:0] opd_x,
+    output [31:0] opd_y,
+
     output [31:0] osync
 );
     MainSV main_sv (
@@ -22,14 +29,18 @@ module MainV(
         .pmodb_i(pmodb),
         .pmoda_i(pmoda),
         .led_o(led),
-        .o1(o1),
-        .o2(o2),
-        .o3(o3),
-        .o4(o4),
-        .o5(o5),
-        .o6(o6),
-        .o7(o7),
-        .o8(o8),
+        .adc_shear1(adc_shear1),
+        .adc_shear2(adc_shear2),
+        .adc_shear3(adc_shear3),
+        .adc_shear4(adc_shear4),
+        .adc_point1(adc_point1),
+        .adc_point2(adc_point2),
+        .adc_point3(adc_point3),
+        .adc_point4(adc_point4),
+        .adc_sine_ref(adc_sine_ref),
+        .adc_opd_ref(adc_opd_ref),
+        .opd_x(opd_x),
+        .opd_y(opd_y),
         .osync(osync)
     );
 endmodule
