@@ -1,3 +1,5 @@
+`default_nettype none // throw error if any wire is not explicitly declared
+
 module MainSV (
     input clk,
     input logic [1:0] sw_i,
@@ -70,6 +72,45 @@ module MainSV (
         .ch7_o(), // NC
         .ch8_o(), // NC
         .tick_o()
+    );
+
+    // tick_o is high for one clock cycle, exactly 100 clock cycles after tick_i is high
+    module Tick100 (
+        input clk_i,
+        input reset_i,
+        input tick_i,
+        output tick_o
+    );
+
+        logic unsigned [8:0] counter;
+        logic counting;
+
+        always_ff @(posedge clk_i) begin
+            if (reset_i) begin
+                counter <= 0;
+                counting <= 0;
+            end else if (tick_i) begin
+                counter <= 0;
+                counting <= 1;
+            end else if (counting) begin
+                if (counter < 99) counter <= counter + 1;
+                else begin
+                    counting <= 0;
+                    counter <= 0;
+                end
+            end
+        end  // ff
+
+        assign tick_o = (counter == 99);
+    endmodule
+
+    // generate master_tick from adc1_tick, to avoid clock jitter problems
+    logic adc_master_tick;
+    Tick100 master_tick_generator (
+        .clk_i(clk),
+        .reset_i(reset),
+        .tick_i(adc1_tick),
+        .tick_o(adc_master_tick)
     );
 
     //
@@ -151,19 +192,19 @@ module MainSV (
     OpdInputFilter opdifilt_sum_opd (
         .clk_i  (clk),
         .reset_i(reset),
-        .tick_i (adc1_tick),
+        .tick_i (adc_master_tick),
         .data_i (adc_shear1),
         .data_o (ifilt_sum_opd_o),
-        .tick_o (tick_ifilt_opd_o)
+        .tick_o ()
     );
 
     OpdInputFilter opdifilt_ref_opd (
         .clk_i  (clk),
         .reset_i(reset),
-        .tick_i (adc1_tick),
+        .tick_i (adc_master_tick),
         .data_i (adc_opd_ref),
         .data_o (ifilt_ref_opd_o),
-        .tick_o ()
+        .tick_o (tick_ifilt_opd_o)
     );
 
     // lock-in amplifier

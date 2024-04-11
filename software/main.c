@@ -306,8 +306,8 @@ int main() {
       payload[num_channels * vals_idx + 3] = adc_shear3;
       payload[num_channels * vals_idx + 4] = adc_shear4;
 
-      payload[num_channels * vals_idx + 5] = adc_point1;
-      payload[num_channels * vals_idx + 6] = adc_point2;
+      payload[num_channels * vals_idx + 5] = x_opd_int;
+      payload[num_channels * vals_idx + 6] = y_opd_int;
       payload[num_channels * vals_idx + 7] = adc_point3;
       payload[num_channels * vals_idx + 8] = adc_point4;
 
