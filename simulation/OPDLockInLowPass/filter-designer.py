@@ -70,8 +70,8 @@ ax.legend()
 fig.savefig(plot_dir + "filter-response-lin.pdf", bbox_inches="tight")
 
 
-# scale coefficients to 24 bit ints
-fir_filter = fir_filter * 2**23 - 1
+# scale coefficients to 32 bit ints
+fir_filter = fir_filter * 2**31 - 1
 fir_filter = np.round(fir_filter).astype(int)
 
 # print scaled coefficients

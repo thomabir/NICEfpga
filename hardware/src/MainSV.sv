@@ -1,5 +1,3 @@
-`default_nettype none // throw error if any wire is not explicitly declared
-
 module MainSV (
     input clk,
     input logic [1:0] sw_i,

@@ -2,8 +2,8 @@ module LockInLowPassTest (
     input logic clk_i,
     input logic reset_i,
     input logic tick_i,
-    input logic signed [23:0] signal_i,
-    output logic signed [23:0] signal_o
+    input logic signed [32:0] signal_i,
+    output logic signed [32:0] signal_o
 );
 
     LockInLowPass lowpass1 (

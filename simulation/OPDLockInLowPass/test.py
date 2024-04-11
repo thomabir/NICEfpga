@@ -1,4 +1,7 @@
-"""Tests for the low pass filter of the lock-in amplifier."""
+"""Tests for the low pass filter of the lock-in amplifier.
+
+Not tested for 32 bits yet.
+"""
 import cocotb
 import matplotlib.pyplot as plt
 import numpy as np
@@ -66,7 +69,7 @@ async def test_white(dut):
         await FallingEdge(dut.clk_i)
 
     # decode the output
-    signal_o = twos_complement_to_float(signal_o, 24)
+    signal_o = twos_complement_to_float(signal_o, 32)
 
     # ignore the beginning when the filter is settling
     idx = t > 1e-3
