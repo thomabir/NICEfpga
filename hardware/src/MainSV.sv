@@ -116,8 +116,9 @@ module MainSV (
     //
 
     // add all photocurrents to get the equivalent of a single photodiode
-    // logic signed [23:0] sum_opd;
-    // assign sum_opd = shear1 + shear2;
+    logic signed [25:0] sum_opd; // sum of four 24 bit signals, thus result is 26 bits
+
+    assign sum_opd = adc_shear1 + adc_shear2 + adc_shear3 + adc_shear4;
 
     // input filters
     logic signed [23:0] ifilt_sum_opd_o;  // QPD1 + QPD2
@@ -191,7 +192,7 @@ module MainSV (
         .clk_i  (clk),
         .reset_i(reset),
         .tick_i (adc_master_tick),
-        .data_i (adc_shear1),
+        .data_i (sum_opd[25:2]),  // only top 24 bits are used
         .data_o (ifilt_sum_opd_o),
         .tick_o ()
     );
