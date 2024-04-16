@@ -21,7 +21,7 @@ f1 = 0
 f2 = 10
 stopband_freq = 50
 num_stages_fir_filter = 41
-n_bits = 48
+n_bits = 32
 
 f = np.linspace(0, fs / 2, 1000)
 
@@ -55,7 +55,7 @@ ax.set_title("Filter response")
 ax.set_ylabel("Gain")
 ax.set_xlabel("Frequency (Hz)")
 ax.legend()
-# fig.savefig("filter-response-lin.pdf", bbox_inches="tight")
+fig.savefig("filter-response-lin.pdf", bbox_inches="tight")
 # plt.show()
 
 # log plot of filter response
@@ -69,7 +69,7 @@ ax.set_ylabel("Gain")
 ax.set_xlabel("Frequency (Hz)")
 ax.set_yscale("log")
 ax.legend()
-# fig.savefig("filter-response-log.pdf", bbox_inches="tight")
+fig.savefig("filter-response-log.pdf", bbox_inches="tight")
 # plt.show()
 
 # linear plot of filter response

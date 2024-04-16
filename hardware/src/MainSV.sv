@@ -111,19 +111,19 @@ module MainSV (
         .tick_o(adc_master_tick)
     );
 
+    // add all photocurrents to get the equivalent of a single photodiode
+    // this used for both OPD and shear measurements
+    logic signed [25:0] shear_sum; // sum of four 24 bit signals, thus result is 26 bits
+    assign shear_sum = adc_shear1 + adc_shear2 + adc_shear3 + adc_shear4;
+
     //
     // OPD signals
     //
 
-    // add all photocurrents to get the equivalent of a single photodiode
-    logic signed [25:0] sum_opd; // sum of four 24 bit signals, thus result is 26 bits
-
-    assign sum_opd = adc_shear1 + adc_shear2 + adc_shear3 + adc_shear4;
-
     // input filters
     logic signed [23:0] ifilt_sum_opd_o;  // QPD1 + QPD2
     logic signed [23:0] ifilt_ref_opd_o;  // 10 kHz ref
-    logic tick_ifilt_opd_o;
+    logic tick_shear_ifilt_opd_o;
 
     module OpdInputFilter (
         input logic clk_i,
@@ -192,7 +192,7 @@ module MainSV (
         .clk_i  (clk),
         .reset_i(reset),
         .tick_i (adc_master_tick),
-        .data_i (sum_opd[25:2]),  // only top 24 bits are used
+        .data_i (shear_sum[25:2]),  // only top 24 bits are used
         .data_o (ifilt_sum_opd_o),
         .tick_o ()
     );
@@ -203,7 +203,7 @@ module MainSV (
         .tick_i (adc_master_tick),
         .data_i (adc_opd_ref),
         .data_o (ifilt_ref_opd_o),
-        .tick_o (tick_ifilt_opd_o)
+        .tick_o (tick_shear_ifilt_opd_o)
     );
 
     // lock-in amplifier
@@ -212,7 +212,7 @@ module MainSV (
     LockInAmplifier opd_lockin (
         .clk_i(clk),
         .reset_i(reset),
-        .tick_i(tick_ifilt_opd_o),
+        .tick_i(tick_shear_ifilt_opd_o),
         .ch1_i(ifilt_ref_opd_o),
         .ch2_i(ifilt_sum_opd_o),
         .x_o(opd_x),
@@ -225,152 +225,172 @@ module MainSV (
     // Position signals
     //
 
+    module QPDInputFilter (
+        input logic clk_i,
+        input logic reset_i,
+        input logic start_i,
+        input logic signed [23:0] signal_i,
+        output logic signed [23:0] signal_o,
+        output logic done_o
+    );
 
-    // module QPDInputFilter (
-    //     input logic clk_i,
-    //     input logic reset_i,
-    //     input logic start_i,
-    //     input logic signed [23:0] signal_i,
-    //     output logic signed [23:0] signal_o,
-    //     output logic done_o
-    // );
+        CompensatedCICFilter #(
+            .NUM_BITS_IN(24),
+            .NUM_BITS_OUT(24),
+            .CIC_STAGES(5),
+            .CIC_DECIMATION(16),
+            .COEFF_LENGTH(25)
+        ) dut (
+            .clk_i(clk_i),
+            .reset_i(reset_i),
+            .tick_i(start_i),
+            .data_i(signal_i),
+            .coeff({
+                -111761,
+                3923,
+                333871,
+                -67106,
+                -354581,
+                213822,
+                -333103,
+                -367217,
+                1856848,
+                374568,
+                -3537164,
+                -160702,
+                4277397,
+                -160702,
+                -3537164,
+                374568,
+                1856848,
+                -367217,
+                -333103,
+                213822,
+                -354581,
+                -67106,
+                333871,
+                3923,
+                -111761
+            }),
+            .data_o(signal_o),
+            .done_o(done_o)
+        );
+    endmodule
 
-    //     CompensatedCICFilter #(
-    //         .NUM_BITS_IN(24),
-    //         .NUM_BITS_OUT(24),
-    //         .CIC_STAGES(5),
-    //         .CIC_DECIMATION(16),
-    //         .COEFF_LENGTH(25)
-    //     ) dut (
-    //         .clk_i(clk_i),
-    //         .reset_i(reset_i),
-    //         .tick_i(start_i),
-    //         .data_i(signal_i),
-    //         .coeff({
-    //             -111761,
-    //             3923,
-    //             333871,
-    //             -67106,
-    //             -354581,
-    //             213822,
-    //             -333103,
-    //             -367217,
-    //             1856848,
-    //             374568,
-    //             -3537164,
-    //             -160702,
-    //             4277397,
-    //             -160702,
-    //             -3537164,
-    //             374568,
-    //             1856848,
-    //             -367217,
-    //             -333103,
-    //             213822,
-    //             -354581,
-    //             -67106,
-    //             333871,
-    //             3923,
-    //             -111761
-    //         }),
-    //         .data_o(signal_o),
-    //         .done_o(done_o)
-    //     );
-    // endmodule
+    logic signed [25:0] shear_diff_x;
+    logic signed [25:0] shear_diff_y;
+    logic signed [25:0] shear_sum_minus;
 
+    // -1 prefactor to compensate for pi phase shift of transimpedance amplifiers
+    // I follow the convention of the (x,y) arrows painted on the quad cell holders
+    assign shear_diff_x = - (adc_shear3 + adc_shear4 - adc_shear1 - adc_shear2);
+    assign shear_diff_y = - (adc_shear1 + adc_shear3 - adc_shear2 - adc_shear4);
+    assign shear_sum_minus = - shear_sum;
 
-    // // input filters
-    // logic signed [23:0] ifilt1_o;  // QPD1
-    // logic signed [23:0] ifilt2_o;  // QPD2
-    // logic signed [23:0] ifilt3_o;  // 500 Hz sin
-    // logic tick_ifilt_o;
+    // input bandpass filters to remove DC offset and noise
+    logic signed [23:0] shear_diff_x_filt;
+    logic signed [23:0] shear_diff_y_filt;
+    logic signed [23:0] shear_sum_filt;
+    logic signed [23:0] sine_ref_filt;
+    logic tick_shear_ifilt_o;
 
-    // // pipe adc1 through ad3 through the QPD input filter
-    // QPDInputFilter qpdifilt1 (
-    //     .clk_i(clk),
-    //     .reset_i(reset),
-    //     .start_i(adc1_tick),
-    //     .signal_i(shear1),
-    //     .signal_o(ifilt1_o),
-    //     .done_o(tick_ifilt_o)
-    // );
+    QPDInputFilter shearifilt1 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .start_i(adc_master_tick),
+        .signal_i(shear_diff_x[25:2]), // only use 24 MSB
+        .signal_o(shear_diff_x_filt),
+        .done_o(tick_shear_ifilt_o)
+    );
 
-    // QPDInputFilter qpdifilt2 (
-    //     .clk_i(clk),
-    //     .reset_i(reset),
-    //     .start_i(adc1_tick),
-    //     .signal_i(shear2),
-    //     .signal_o(ifilt2_o),
-    //     .done_o()
-    // );
+    QPDInputFilter shearifilt2 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .start_i(adc_master_tick),
+        .signal_i(shear_diff_y[25:2]), // only use 24 MSB
+        .signal_o(shear_diff_y_filt),
+        .done_o()
+    );
 
-    // QPDInputFilter qpdifilt3 (
-    //     .clk_i(clk),
-    //     .reset_i(reset),
-    //     .start_i(adc1_tick),
-    //     .signal_i(shear3),
-    //     .signal_o(ifilt3_o),
-    //     .done_o()
-    // );
+    QPDInputFilter shearifilt3 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .start_i(adc_master_tick),
+        .signal_i(shear_sum_minus[25:2]), // only use 24 MSB
+        .signal_o(shear_sum_filt),
+        .done_o()
+    );
 
-
-
-    // // Hilbert transformer to phase shift 100 Hz sin to make it cos
-    // logic signed [23:0] sin100;
-    // logic signed [23:0] cos100;
-    // logic hilbert_done;
-    // HilbertTransformerComplete #(
-    //     .NUM_BITS(24),
-    //     .COEFF_LENGTH(13)
-    // ) hilbert1 (
-    //     .clk_i(clk),
-    //     .tick_i(tick_ifilt_o),
-    //     .reset_i(reset),
-    //     .signal_i(ifilt3_o),
-    //     .ha_coeffs({0, -28824, 0, -605240, 0, -4769003, 0, 4769003, 0, 605240, 0, 28824, 0}),
-    //     .delay_coeffs({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0}),
-    //     .sin_o(sin100),
-    //     .cos_o(cos100),
-    //     .done_o(hilbert_done)
-    // );
-
-    // // Then, Hilbert transformer's delay line to also shift the two QPD signals
-    // logic signed [23:0] qpd1_delayed;
-    // logic signed [23:0] qpd2_delayed;
-
-    // FIRFilter #(
-    //     .COEFF_LENGTH(13),
-    //     .BITWIDTH(24)
-    // ) qpd1_delay (
-    //     .clk_i(clk),
-    //     .tick_i(tick_ifilt_o),
-    //     .signal_i(ifilt1_o),
-    //     .signal_o(qpd1_delayed),
-    //     .done_o(),
-    //     .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
-    // );
-
-    // FIRFilter #(
-    //     .COEFF_LENGTH(13),
-    //     .BITWIDTH(24)
-    // ) qpd2_delay (
-    //     .clk_i(clk),
-    //     .tick_i(tick_ifilt_o),
-    //     .signal_i(ifilt2_o),
-    //     .signal_o(qpd2_delayed),
-    //     .done_o(),
-    //     .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
-    // );
+    QPDInputFilter shearifilt4 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .start_i(adc_master_tick),
+        .signal_i(adc_sine_ref),
+        .signal_o(sine_ref_filt),
+        .done_o()
+    );
 
 
-    // // current to position
-    // logic signed [24:0] sum;
-    // logic signed [24:0] diff;
 
-    // // prefactor -1 to undo pi phase shift from inverting transimpedance amplifier
-    // assign sum = -(qpd1_delayed + qpd2_delayed);
-    // assign diff = -(qpd1_delayed - qpd2_delayed);
+    // Hilbert transformer to phase shift sine_ref_filt to make it cos_ref_filt
+    logic signed [23:0] sine_ref_hilbert;
+    logic signed [23:0] cos_ref_hilbert;
+    logic shear_hilbert_done;
+    HilbertTransformerComplete #(
+        .NUM_BITS(24),
+        .COEFF_LENGTH(13)
+    ) hilbert1 (
+        .clk_i(clk),
+        .tick_i(tick_shear_ifilt_o),
+        .reset_i(reset),
+        .signal_i(sine_ref_filt),
+        .ha_coeffs({0, -28824, 0, -605240, 0, -4769003, 0, 4769003, 0, 605240, 0, 28824, 0}),
+        .delay_coeffs({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0}),
+        .sin_o(sine_ref_hilbert),
+        .cos_o(cos_ref_hilbert),
+        .done_o(shear_hilbert_done)
+    );
 
+    // Then, use Hilbert transformer's delay line to also shift the other shear signals
+    logic signed [23:0] shear_diff_x_delayed;
+    logic signed [23:0] shear_diff_y_delayed;
+    logic signed [23:0] shear_sum_delayed;
+
+    FIRFilter #(
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
+    ) qpd1_delay (
+        .clk_i(clk),
+        .tick_i(tick_shear_ifilt_o),
+        .signal_i(shear_diff_x_filt),
+        .signal_o(shear_diff_x_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
+
+    FIRFilter #(
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
+    ) qpd2_delay (
+        .clk_i(clk),
+        .tick_i(tick_shear_ifilt_o),
+        .signal_i(shear_diff_y_filt),
+        .signal_o(shear_diff_y_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
+
+    FIRFilter #(
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
+    ) qpd3_delay (
+        .clk_i(clk),
+        .tick_i(tick_shear_ifilt_o),
+        .signal_i(shear_sum_filt),
+        .signal_o(shear_sum_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
 
     // // lock-in amplifier
     // logic signed [47:0] x1;
@@ -382,11 +402,11 @@ module MainSV (
     // QpdDemodulator demod (
     //     .clk_i(clk),
     //     .reset_i(reset),
-    //     .tick_i(hilbert_done),
-    //     .diff_i(diff[24:1]),
-    //     .sum_i(sum[24:1]),
-    //     .sin_i(sin100),
-    //     .cos_i(cos100),
+    //     .tick_i(shear_hilbert_done),
+    //     .diff_i(diff),
+    //     .sum_i(sum),
+    //     .sin_i(sine_ref_hilbert),
+    //     .cos_i(cos_ref_hilbert),
     //     .x1_o(x1),
     //     .x2_o(x2),
     //     .i1_o(i1),
@@ -401,7 +421,7 @@ module MainSV (
     //     if (reset) begin
     //         counter_pos <= 0;
     //     end
-    //     else if (hilbert_done) begin
+    //     else if (shear_hilbert_done) begin
     //         counter_pos <= counter_pos + 1;
     //     end
     // end
