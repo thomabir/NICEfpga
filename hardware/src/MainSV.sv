@@ -29,7 +29,7 @@ module MainSV (
     output logic signed [31:0] i2,
 
     // clock counters for synchronization
-    output logic unsigned [32:0] counter
+    output logic unsigned [31:0] counter
 );
     // reset
     logic reset;
