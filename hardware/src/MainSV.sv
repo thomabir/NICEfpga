@@ -21,9 +21,15 @@ module MainSV (
     // processed data
     output logic signed [31:0] opd_x,
     output logic signed [31:0] opd_y,
+    output logic signed [31:0] x1,
+    output logic signed [31:0] x2,
+    output logic signed [31:0] y1,
+    output logic signed [31:0] y2,
+    output logic signed [31:0] i1,
+    output logic signed [31:0] i2,
 
     // clock counters for synchronization
-    output logic unsigned [32:0] osync
+    output logic unsigned [32:0] counter
 );
     // reset
     logic reset;
@@ -399,49 +405,32 @@ module MainSV (
     // logic signed [47:0] i2;
     // logic demod_done_o;
 
-    // QpdDemodulator demod (
-    //     .clk_i(clk),
-    //     .reset_i(reset),
-    //     .tick_i(shear_hilbert_done),
-    //     .diff_i(diff),
-    //     .sum_i(sum),
-    //     .sin_i(sine_ref_hilbert),
-    //     .cos_i(cos_ref_hilbert),
-    //     .x1_o(x1),
-    //     .x2_o(x2),
-    //     .i1_o(i1),
-    //     .i2_o(i2),
-    //     .done_o(demod_done_o)
-    // );
-
-
-    // // A counter that increases by 1 every time the position signals are updated
-    // logic unsigned [31:0] counter_pos;
-    // always_ff @(posedge clk) begin
-    //     if (reset) begin
-    //         counter_pos <= 0;
-    //     end
-    //     else if (shear_hilbert_done) begin
-    //         counter_pos <= counter_pos + 1;
-    //     end
-    // end
+    QpdDemodulator demod (
+        .clk_i(clk),
+        .reset_i(reset),
+        .tick_i(shear_hilbert_done),
+        .diff_x_i(shear_diff_x_delayed),
+        .diff_y_i(shear_diff_y_delayed),
+        .sum_i(shear_sum_delayed),
+        .sin_i(sine_ref_hilbert),
+        .cos_i(cos_ref_hilbert),
+        .x1_o(x1),
+        .x2_o(x2),
+        .y1_o(y1),
+        .y2_o(y2),
+        .i1_o(i1),
+        .i2_o(i2),
+        .done_o(demod_done_o)
+    );
 
     // A counter that increases every time the ADC is read
-    logic unsigned [32:0] counter_opd;
     always_ff @(posedge clk) begin
         if (reset) begin
-            counter_opd <= 0;
+            counter <= 0;
         end
-        else if (adc1_tick) begin
-            counter_opd <= counter_opd + 1;
+        else if (adc_master_tick) begin
+            counter <= counter + 1;
         end
     end
 
-
-    // send only the 32 MSBs, as that is the max width of the AXI GPIO interface
-    // assign oreg1 = x1[47:16];
-    // assign oreg2 = i1[47:16];
-    // assign oreg3 = x2[47:16];
-    // assign oreg4 = i2[47:16];
-    assign osync = counter_opd;
 endmodule

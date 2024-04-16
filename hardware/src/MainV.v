@@ -19,8 +19,14 @@ module MainV(
 
     output [31:0] opd_x,
     output [31:0] opd_y,
+    output [31:0] x1,
+    output [31:0] x2,
+    output [31:0] y1,
+    output [31:0] y2,
+    output [31:0] i1,
+    output [31:0] i2,
 
-    output [31:0] osync
+    output [31:0] counter
 );
     MainSV main_sv (
         .clk(clk),
@@ -41,6 +47,12 @@ module MainV(
         .adc_opd_ref(adc_opd_ref),
         .opd_x(opd_x),
         .opd_y(opd_y),
-        .osync(osync)
+        .x1(x1),
+        .x2(x2),
+        .y1(y1),
+        .y2(y2),
+        .i1(i1),
+        .i2(i2),
+        .counter(counter)
     );
 endmodule
