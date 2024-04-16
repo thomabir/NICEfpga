@@ -14,8 +14,8 @@ module QpdDemodulator #(
     output logic signed [NUM_BITS_OUT-1:0] x2_o,
     output logic signed [NUM_BITS_OUT-1:0] y1_o,
     output logic signed [NUM_BITS_OUT-1:0] y2_o,
-    output logic signed [NUM_BITS_OUT:0] i1_o,
-    output logic signed [NUM_BITS_OUT:0] i2_o,
+    output logic signed [NUM_BITS_OUT-1:0] i1_o,
+    output logic signed [NUM_BITS_OUT-1:0] i2_o,
     output logic done_o
 );
 
@@ -95,7 +95,7 @@ module DemodLowPass (
 );
 
   parameter int NumOfStages = 41;
-  logic signed [47:0] coeffs[NumOfStages] = '{
+  logic signed [31:0] coeffs[NumOfStages] = '{
       32'd615349,
       32'd2187343,
       32'd4457282,
@@ -141,7 +141,7 @@ module DemodLowPass (
 
   FIRFilter #(
       .COEFF_LENGTH(NumOfStages),
-      .BITWIDTH(48)
+      .BITWIDTH(32)
   ) shift1 (
       .clk_i(clk_i),
       .tick_i(tick_i),
