@@ -126,7 +126,7 @@ int main() {
 
   xil_printf("Initializing payload containers\n\r");
   // max payload size: 1500 bytes = 12000 bits = 375 int (32 bits each)
-  const int num_channels = 12;
+  const int num_channels = 16;
   const int num_timepoints = 10;
   int payload_size = num_channels * num_timepoints;
   int payload[payload_size];
@@ -192,18 +192,19 @@ int main() {
   int32_t adc_sine_ref, adc_opd_ref; // references
 
   // fpga: processed data
-  int32_t x_opd_int, y_opd_int;
-  // int32_t x1_int, i1_int, x2_int, i2_int;
+  int32_t x_opd_int, y_opd_int; // opd
+  int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int, shear_i2_int; // shear
+  int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int, point_i2_int; // pointing
 
   // intermediate variables
-  double x_opd, y_opd, phase_d, prev_phase_d;
-  // double x1, i1, x2, i2;
-  // double x1d, x2d;           // corrected x and y positions
+  double x_opd, y_opd, phase_d, prev_phase_d; // opd
+  double shear_x1, shear_x2, shear_y1, shear_y2, shear_i1, shear_i2; // shear
+  double shear_x1d, shear_x2d, shear_y1d, shear_y2d; // shear corrected
   
 
   // outputs to be sent to PC
-  int32_t phase_rad_int;
-  // int32_t x1d_int, x2d_int;  // corrected x and y positions
+  int32_t phase_rad_int; // opd phase in rad
+  int32_t shear_x1d_int, shear_x2d_int, shear_y1d_int, shear_y2d_int; // shear corrected
   
   prev_count_opd = 0;
 
@@ -212,7 +213,6 @@ int main() {
   while (1) {
     // Get counter from FPGA
     count_opd = XGpio_DiscreteRead(&xgpio_in[0], 1);
-    // printf("%d\n\r", count_opd);
 
     // if the counter has incremented, read the values
     if (count_opd == prev_count_opd + 1) {
@@ -234,30 +234,39 @@ int main() {
       x_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 1);
       y_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 2);
 
-      // printf("%d, %d\n\r", x_opd_int, y_opd_int);
+      shear_x1_int = XGpio_DiscreteRead(&xgpio_in[7], 1);
+      shear_x2_int = XGpio_DiscreteRead(&xgpio_in[7], 2);
+      shear_y1_int = XGpio_DiscreteRead(&xgpio_in[8], 1);
+      shear_y2_int = XGpio_DiscreteRead(&xgpio_in[8], 2);
+      shear_i1_int = XGpio_DiscreteRead(&xgpio_in[9], 1);
+      shear_i2_int = XGpio_DiscreteRead(&xgpio_in[9], 2);
 
-      // cast to doubles
-      // x1 = (double)x1_int;  // x1
-      // i1 = (double)i1_int;  // i1
-      // x2 = (double)x2_int;  // x2
-      // i2 = (double)i2_int;  // i2
+      // cast to doubles for calculations
+      shear_x1 = (double)shear_x1_int;  // x1
+      shear_x2 = (double)shear_x2_int;  // x2
+      shear_y1 = (double)shear_y1_int;  // y1
+      shear_y2 = (double)shear_y2_int;  // y2
+      shear_i1 = (double)shear_i1_int;  // i1
+      shear_i2 = (double)shear_i2_int;  // i2
       x_opd = (double)x_opd_int;
       y_opd = (double)y_opd_int;
 
-      // calculate the positions: xn = xn/in
-      // x1d = x1; /// i1;
-      // x2d = x2; // / i2;
+      // Shear
+      shear_x1d = shear_x1 / shear_i1 * 1.11e3; // um
+      shear_x2d = shear_x2 / shear_i2 * 1.11e3; // um
+      shear_y1d = shear_y1 / shear_i1 * 1.11e3; // um
+      shear_y2d = shear_y2 / shear_i2 * 1.11e3; // um
 
-      // calculate the phase using atan2
+      shear_x1d_int = (int32_t)(shear_x1d * 1000); // nm
+      shear_x2d_int = (int32_t)(shear_x2d * 1000); // nm
+      shear_y1d_int = (int32_t)(shear_y1d * 1000); // nm
+      shear_y2d_int = (int32_t)(shear_y2d * 1000); // nm
+
+
+      // OPD
       phase_d = -atan2(y_opd, x_opd);
 
-      // print phased
-      // printf("%f\n\r", phase_d);
-
-      // convert from rad to deg
-      // phase_d = phase_d * 180. / PI;
-
-      // unwrap the phase (rad)
+      // phase unwrapping
       if (phase_d < prev_phase_d - PI) {
         phase_d += 2 * PI;
       } else if (phase_d > prev_phase_d + PI) {
@@ -267,40 +276,15 @@ int main() {
       // set the previous phase to the current phase
       prev_phase_d = phase_d;
 
-      // printf("%d\n\r", x1_int);
-
-      // printf("x_int: %f, y_int: %f, phase: %f\n\r", x_d, y_d, phase_d);
-      // printf("phase: %f\n\r", phase_d);
-
-
-      // printf("%d\n\r", phase_int);
-
-      // convert to nm
-      // phase_d = phase_d * 1550 / 360;
-
-      // convert pos to um
-      // x1d = x1d;// * 1.11e3;
-      // x2d = x2d;// * 1.11e3;
-
-      // print floats
-      // printf("%f, %f, %f\n\r", x1d, x2d, phase_d);
-
       // convert to fixed point for sending
-      // i1_int = (int32_t)(i1 * 1000); //
-      // i2_int = (int32_t)(i2 * 1000); //
-      // x1d_int = (int32_t)(x1d * 1000); // nm
-      // x2d_int = (int32_t)(x2d * 1000); // nm
       phase_rad_int = (int32_t)(phase_d * 10000);  // 0.1 mrad = 0.006 deg precision
 
-      // store count_pos and phase_int in payload
-      // payload[2 * vals_idx] = count_pos;
-      // payload[2 * vals_idx + 1] = phase_int;
+      // assemble the payload
 
-      // printf("%d\n\r", count_opd);
-
-      // store count_pos and adc readings in payload
+      // counter
       payload[num_channels * vals_idx] = count_opd;
 
+      // adc readings
       payload[num_channels * vals_idx + 1] = adc_shear1;
       payload[num_channels * vals_idx + 2] = adc_shear2;
       payload[num_channels * vals_idx + 3] = adc_shear3;
@@ -314,7 +298,14 @@ int main() {
       payload[num_channels * vals_idx + 9] = adc_sine_ref;
       payload[num_channels * vals_idx + 10] = adc_opd_ref;
 
+      // opd
       payload[num_channels * vals_idx + 11] = phase_rad_int;
+
+      // shear
+      payload[num_channels * vals_idx + 12] = shear_x1d_int;
+      payload[num_channels * vals_idx + 13] = shear_x2d_int;
+      payload[num_channels * vals_idx + 14] = shear_y1d_int;
+      payload[num_channels * vals_idx + 15] = shear_y2d_int;
 
 
       /* Receive packets */
@@ -352,7 +343,6 @@ int main() {
     // set the previous counter to the current counter
     prev_count_opd = count_opd;
 
-    // usleep(10000);
   }
 
   cleanup_platform();
