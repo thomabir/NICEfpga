@@ -18,17 +18,27 @@ module MainSV (
     output logic signed [31:0] adc_sine_ref,
     output logic signed [31:0] adc_opd_ref,
 
-    // processed data
+    // processed opd
     output logic signed [31:0] opd_x,
     output logic signed [31:0] opd_y,
-    output logic signed [31:0] x1,
-    output logic signed [31:0] x2,
-    output logic signed [31:0] y1,
-    output logic signed [31:0] y2,
-    output logic signed [31:0] i1,
-    output logic signed [31:0] i2,
 
-    // clock counters for synchronization
+    // processed shear
+    output logic signed [31:0] shear_x1,
+    output logic signed [31:0] shear_x2,
+    output logic signed [31:0] shear_y1,
+    output logic signed [31:0] shear_y2,
+    output logic signed [31:0] shear_i1,
+    output logic signed [31:0] shear_i2,
+
+    // processed pointing
+    output logic signed [31:0] point_x1,
+    output logic signed [31:0] point_x2,
+    output logic signed [31:0] point_y1,
+    output logic signed [31:0] point_y2,
+    output logic signed [31:0] point_i1,
+    output logic signed [31:0] point_i2,
+
+    // clock counter for synchronization
     output logic unsigned [31:0] counter
 );
     // reset
@@ -141,7 +151,7 @@ module MainSV (
     );
 
         FIRFilter #(
-            .COEFF_LENGTH(41)
+            .COEFF_LENGTH(21)
         ) input_fir (
             .clk_i(clk_i),
             .tick_i(tick_i),
@@ -149,47 +159,27 @@ module MainSV (
             .signal_o(data_o),
             .done_o(tick_o),
             .coeff({
-                3131,
-                3088,
-                -7302,
-                -34808,
-                -78326,
-                -124386,
-                -150791,
-                -139637,
-                -93913,
-                -46108,
-                -48658,
-                -145320,
-                -336117,
-                -557017,
-                -692472,
-                -622718,
-                -286880,
-                270726,
-                899702,
-                1395544,
-                1583627,
-                1395544,
-                899702,
-                270726,
-                -286880,
-                -622718,
-                -692472,
-                -557017,
-                -336117,
-                -145320,
-                -48658,
-                -46108,
-                -93913,
-                -139637,
-                -150791,
-                -124386,
-                -78326,
-                -34808,
-                -7302,
-                3088,
-                3131
+                18177,
+                -1996,
+                -156523,
+                -297170,
+                -165831,
+                -87593,
+                -691506,
+                -1397353,
+                -567521,
+                1783518,
+                3127631,
+                1783518,
+                -567521,
+                -1397353,
+                -691506,
+                -87593,
+                -165831,
+                -297170,
+                -156523,
+                -1996,
+                18177
             })
         );
     endmodule
@@ -228,7 +218,7 @@ module MainSV (
 
 
     //
-    // Position signals
+    // Shear signals
     //
 
     module QPDInputFilter (
@@ -414,13 +404,120 @@ module MainSV (
         .sum_i(shear_sum_delayed),
         .sin_i(sine_ref_hilbert),
         .cos_i(cos_ref_hilbert),
-        .x1_o(x1),
-        .x2_o(x2),
-        .y1_o(y1),
-        .y2_o(y2),
-        .i1_o(i1),
-        .i2_o(i2),
+        .x1_o(shear_x1),
+        .x2_o(shear_x2),
+        .y1_o(shear_y1),
+        .y2_o(shear_y2),
+        .i1_o(shear_i1),
+        .i2_o(shear_i2),
         .done_o(demod_done_o)
+    );
+
+
+    //
+    // Pointing signals
+    //
+
+    logic signed [25:0] point_diff_x;
+    logic signed [25:0] point_diff_y;
+    logic signed [25:0] point_sum_minus;
+
+    // -1 prefactor to compensate for pi phase shift of transimpedance amplifiers
+    // I follow the convention of the (x,y) arrows painted on the quad cell holders
+    assign point_diff_x = - (adc_point3 + adc_point4 - adc_point1 - adc_point2);
+    assign point_diff_y = - (adc_point1 + adc_point3 - adc_point2 - adc_point4);
+    assign point_sum_minus = - (adc_point1 + adc_point2 + adc_point3 + adc_point4);
+
+    // input bandpass filters to remove DC offset and noise
+    logic signed [23:0] point_diff_x_filt;
+    logic signed [23:0] point_diff_y_filt;
+    logic signed [23:0] point_sum_filt;
+
+    QPDInputFilter pointifilt1 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .start_i(adc_master_tick),
+        .signal_i(point_diff_x[25:2]), // only use 24 MSB
+        .signal_o(point_diff_x_filt),
+        .done_o()
+    );
+
+    QPDInputFilter pointifilt2 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .start_i(adc_master_tick),
+        .signal_i(point_diff_y[25:2]), // only use 24 MSB
+        .signal_o(point_diff_y_filt),
+        .done_o()
+    );
+
+    QPDInputFilter pointifilt3 (
+        .clk_i(clk),
+        .reset_i(reset),
+        .start_i(adc_master_tick),
+        .signal_i(point_sum_minus[25:2]), // only use 24 MSB
+        .signal_o(point_sum_filt),
+        .done_o()
+    );
+
+    // Use Hilbert transformer's delay line to also shift the other point signals
+    logic signed [23:0] point_diff_x_delayed;
+    logic signed [23:0] point_diff_y_delayed;
+    logic signed [23:0] point_sum_delayed;
+    logic point_hilbert_done;
+
+    FIRFilter #(
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
+    ) qpd4_delay (
+        .clk_i(clk),
+        .tick_i(tick_shear_ifilt_o),
+        .signal_i(point_diff_x_filt),
+        .signal_o(point_diff_x_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
+
+    FIRFilter #(
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
+    ) qpd5_delay (
+        .clk_i(clk),
+        .tick_i(tick_shear_ifilt_o),
+        .signal_i(point_diff_y_filt),
+        .signal_o(point_diff_y_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
+
+    FIRFilter #(
+        .COEFF_LENGTH(13),
+        .BITWIDTH(24)
+    ) qpd6_delay (
+        .clk_i(clk),
+        .tick_i(tick_shear_ifilt_o),
+        .signal_i(point_sum_filt),
+        .signal_o(point_sum_delayed),
+        .done_o(),
+        .coeff({0, 0, 0, 0, 0, 0, 8388607, 0, 0, 0, 0, 0, 0})
+    );
+
+    QpdDemodulator point_demod (
+        .clk_i(clk),
+        .reset_i(reset),
+        .tick_i(shear_hilbert_done),
+        .diff_x_i(point_diff_x_delayed),
+        .diff_y_i(point_diff_y_delayed),
+        .sum_i(point_sum_delayed),
+        .sin_i(sine_ref_hilbert),
+        .cos_i(cos_ref_hilbert),
+        .x1_o(point_x1),
+        .x2_o(point_x2),
+        .y1_o(point_y1),
+        .y2_o(point_y2),
+        .i1_o(point_i1),
+        .i2_o(point_i2),
+        .done_o(point_demod_done_o)
     );
 
     // A counter that increases every time the ADC is read

@@ -1,30 +1,29 @@
 module LockInAmplifier #(
-    parameter int NUM_BITS_IN = 24,
-    parameter int NUM_BITS_OUT = 32
+    parameter int NUM_BITS = 24
 ) (
     input logic clk_i,
     input logic reset_i,
     input logic tick_i,
-    input logic signed [NUM_BITS_IN-1:0] ch1_i,  // clean reference signal
-    input logic signed [NUM_BITS_IN-1:0] ch2_i,  // noisy signal
-    output logic signed [NUM_BITS_OUT-1:0] x_o,
-    output logic signed [NUM_BITS_OUT-1:0] y_o,
+    input logic signed [NUM_BITS-1:0] ch1_i,  // clean reference signal
+    input logic signed [NUM_BITS-1:0] ch2_i,  // noisy signal
+    output logic signed [NUM_BITS-1:0] x_o,
+    output logic signed [NUM_BITS-1:0] y_o,
     output done_o
 );
 
     // Internal signals
 
     // ch1, shifted by 90 degrees and delayed
-    logic signed [NUM_BITS_IN-1:0] ch1_shifted;
+    logic signed [NUM_BITS-1:0] ch1_shifted;
 
     // ch1 and ch2, delayed
-    logic signed [NUM_BITS_IN-1:0] ch1_delayed;
-    logic signed [NUM_BITS_IN-1:0] ch2_delayed;
+    logic signed [NUM_BITS-1:0] ch1_delayed;
+    logic signed [NUM_BITS-1:0] ch2_delayed;
 
 
     // multipliers with correct number of bits
-    logic signed [NUM_BITS_IN*2-1:0] ch1_delayed_mult_ch2;
-    logic signed [NUM_BITS_IN*2-1:0] ch1_shifted_mult_ch2;
+    logic signed [NUM_BITS*2-1:0] ch1_delayed_mult_ch2;
+    logic signed [NUM_BITS*2-1:0] ch1_shifted_mult_ch2;
 
     // delay ch1 by 90 degrees + delay line
     HilbertTransformer shift1 (
@@ -56,13 +55,13 @@ module LockInAmplifier #(
     assign ch1_shifted_mult_ch2 = ch1_shifted * ch2_delayed;
 
     // low pass filters
-    logic signed [NUM_BITS_OUT-1:0] filtered_1;
-    logic signed [NUM_BITS_OUT-1:0] filtered_2;
+    logic signed [NUM_BITS-1:0] filtered_1;
+    logic signed [NUM_BITS-1:0] filtered_2;
 
 
     LockInLowPass lpf1 (
         .clk_i(clk_i),
-        .signal_i(ch1_delayed_mult_ch2[2*NUM_BITS_IN-1:2*NUM_BITS_IN-NUM_BITS_OUT]),
+        .signal_i(ch1_delayed_mult_ch2[2*NUM_BITS-1:24]),
         .signal_o(filtered_1),
         .tick_i(tick_i),
         .done_o(done_o)
@@ -70,7 +69,7 @@ module LockInAmplifier #(
 
     LockInLowPass lpf2 (
         .clk_i(clk_i),
-        .signal_i(ch1_shifted_mult_ch2[2*NUM_BITS_IN-1:2*NUM_BITS_IN-NUM_BITS_OUT]),
+        .signal_i(ch1_shifted_mult_ch2[2*NUM_BITS-1:24]),
         .signal_o(filtered_2),
         .tick_i(tick_i),
         .done_o()
@@ -93,25 +92,25 @@ module HilbertTransformer (
     logic signed [23:0] coeffs[NumOfStages] = '{
         0,
         0,
-        -19347,
+        -19348,
         0,
-        -121991,
+        -121992,
         0,
         -442606,
         0,
         -1310247,
         0,
-        -5164371,
+        -5164372,
         0,
-        5164371,
+        5164372,
         0,
         1310247,
         0,
         442606,
         0,
-        121991,
+        121992,
         0,
-        19347,
+        19348,
         0,
         0
     };
@@ -179,17 +178,57 @@ endmodule
 module LockInLowPass (
     input clk_i,
     input tick_i,
-    input logic signed [31:0] signal_i,
-    output logic signed [31:0] signal_o,
+    input logic signed [23:0] signal_i,
+    output logic signed [23:0] signal_o,
     output logic done_o
 );
-    parameter int NumOfStages = 81;
-    logic signed [31:0] coeffs[NumOfStages] = '{6866, 24284, 61044, 127821, 236608, 398863, 622665, 909110, 1248207, 1614918, 1966023, 2238781, 2352180, 2211627, 1717410, 777048, -679179, -2680597, -5198327, -8129429, -11285642, -14389069, -17076969, -18916902, -19432600, -18139519, -14587908, -8409799, 634388, 12614696, 27400773, 44645769, 63788056, 84072456, 104590451, 124337064, 142279954, 157434984, 168941338, 176129259, 178573772, 176129259, 168941338, 157434984, 142279954, 124337064, 104590451, 84072456, 63788056, 44645769, 27400773, 12614696, 634388, -8409799, -14587908, -18139519, -19432600, -18916902, -17076969, -14389069, -11285642, -8129429, -5198327, -2680597, -679179, 777048, 1717410, 2211627, 2352180, 2238781, 1966023, 1614918, 1248207, 909110, 622665, 398863, 236608, 127821, 61044, 24284, 6866};
-
+    parameter int NumOfStages = 41;
+    logic signed [23:0] coeffs[NumOfStages] = '{
+        144,
+        797,
+        2561,
+        6017,
+        11095,
+        16239,
+        17830,
+        10563,
+        -10688,
+        -47567,
+        -94469,
+        -136116,
+        -148413,
+        -103711,
+        20196,
+        229968,
+        509453,
+        818924,
+        1102458,
+        1302031,
+        1373963,
+        1302031,
+        1102458,
+        818924,
+        509453,
+        229968,
+        20196,
+        -103711,
+        -148413,
+        -136116,
+        -94469,
+        -47567,
+        -10688,
+        10563,
+        17830,
+        16239,
+        11095,
+        6017,
+        2561,
+        797,
+        144
+    };
 
     FIRFilter #(
-        .COEFF_LENGTH(NumOfStages),
-        .BITWIDTH(32)
+        .COEFF_LENGTH(NumOfStages)
     ) shift1 (
         .clk_i(clk_i),
         .tick_i(tick_i),

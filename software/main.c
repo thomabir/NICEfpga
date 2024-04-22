@@ -126,7 +126,7 @@ int main() {
 
   xil_printf("Initializing payload containers\n\r");
   // max payload size: 1500 bytes = 12000 bits = 375 int (32 bits each)
-  const int num_channels = 16;
+  const int num_channels = 20;
   const int num_timepoints = 10;
   int payload_size = num_channels * num_timepoints;
   int payload[payload_size];
@@ -144,13 +144,15 @@ int main() {
 
   // activate the GPIOs, two channels each, data direction: read
   xil_printf("Initializing GPIO\n\r");
-  const int num_xgpio_instances = 10;
+  const int num_xgpio_instances = 13;
   XGpio xgpio_in[num_xgpio_instances];
 
   for (int i = 0; i < num_xgpio_instances; i++) {
       XGpio_Initialize(&xgpio_in[i], XPAR_AXI_GPIO_0_DEVICE_ID + i); // works in practice
       XGpio_SetDataDirection(&xgpio_in[i], 1, 1); // (instance pointer, channel, direction mask)
-      XGpio_SetDataDirection(&xgpio_in[i], 2, 1);
+      if (i != 0) {
+        XGpio_SetDataDirection(&xgpio_in[i], 2, 1); // CH0 is single channel
+      }
   }
 
   /* receive and process packets */
@@ -200,11 +202,15 @@ int main() {
   double x_opd, y_opd, phase_d, prev_phase_d; // opd
   double shear_x1, shear_x2, shear_y1, shear_y2, shear_i1, shear_i2; // shear
   double shear_x1d, shear_x2d, shear_y1d, shear_y2d; // shear corrected
+
+  double point_x1, point_x2, point_y1, point_y2, point_i1, point_i2; // pointing
+  double point_x1d, point_x2d, point_y1d, point_y2d; // pointing corrected
   
 
   // outputs to be sent to PC
   int32_t phase_rad_int; // opd phase in rad
   int32_t shear_x1d_int, shear_x2d_int, shear_y1d_int, shear_y2d_int; // shear corrected
+  int32_t point_x1d_int, point_x2d_int, point_y1d_int, point_y2d_int; // pointing corrected
   
   prev_count_opd = 0;
 
@@ -241,15 +247,31 @@ int main() {
       shear_i1_int = XGpio_DiscreteRead(&xgpio_in[9], 1);
       shear_i2_int = XGpio_DiscreteRead(&xgpio_in[9], 2);
 
+      point_x1_int = XGpio_DiscreteRead(&xgpio_in[10], 1);
+      point_x2_int = XGpio_DiscreteRead(&xgpio_in[10], 2);
+      point_y1_int = XGpio_DiscreteRead(&xgpio_in[11], 1);
+      point_y2_int = XGpio_DiscreteRead(&xgpio_in[11], 2);
+      point_i1_int = XGpio_DiscreteRead(&xgpio_in[12], 1);
+      point_i2_int = XGpio_DiscreteRead(&xgpio_in[12], 2);
+
       // cast to doubles for calculations
+      x_opd = (double)x_opd_int;
+      y_opd = (double)y_opd_int;
+
       shear_x1 = (double)shear_x1_int;  // x1
       shear_x2 = (double)shear_x2_int;  // x2
       shear_y1 = (double)shear_y1_int;  // y1
       shear_y2 = (double)shear_y2_int;  // y2
       shear_i1 = (double)shear_i1_int;  // i1
       shear_i2 = (double)shear_i2_int;  // i2
-      x_opd = (double)x_opd_int;
-      y_opd = (double)y_opd_int;
+
+      point_x1 = (double)point_x1_int;  // x1
+      point_x2 = (double)point_x2_int;  // x2
+      point_y1 = (double)point_y1_int;  // y1
+      point_y2 = (double)point_y2_int;  // y2
+      point_i1 = (double)point_i1_int;  // i1
+      point_i2 = (double)point_i2_int;  // i2
+      
 
       // Shear
       shear_x1d = shear_x1 / shear_i1 * 1.11e3; // um
@@ -261,6 +283,18 @@ int main() {
       shear_x2d_int = (int32_t)(shear_x2d * 1000); // nm
       shear_y1d_int = (int32_t)(shear_y1d * 1000); // nm
       shear_y2d_int = (int32_t)(shear_y2d * 1000); // nm
+
+
+      // Pointing
+      point_x1d = point_x1 / point_i1 * 1.11e3; // um
+      point_x2d = point_x2 / point_i2 * 1.11e3; // um
+      point_y1d = point_y1 / point_i1 * 1.11e3; // um
+      point_y2d = point_y2 / point_i2 * 1.11e3; // um
+      
+      point_x1d_int = (int32_t)(point_x1d * 1000); // nm
+      point_x2d_int = (int32_t)(point_x2d * 1000); // nm
+      point_y1d_int = (int32_t)(point_y1d * 1000); // nm
+      point_y2d_int = (int32_t)(point_y2d * 1000); // nm
 
 
       // OPD
@@ -306,6 +340,12 @@ int main() {
       payload[num_channels * vals_idx + 13] = shear_x2d_int;
       payload[num_channels * vals_idx + 14] = shear_y1d_int;
       payload[num_channels * vals_idx + 15] = shear_y2d_int;
+
+      // pointing
+      payload[num_channels * vals_idx + 16] = point_x1d_int;
+      payload[num_channels * vals_idx + 17] = point_x2d_int;
+      payload[num_channels * vals_idx + 18] = point_y1d_int;
+      payload[num_channels * vals_idx + 19] = point_y2d_int;
 
 
       /* Receive packets */
