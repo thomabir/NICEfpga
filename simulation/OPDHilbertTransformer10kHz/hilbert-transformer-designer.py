@@ -1,4 +1,3 @@
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal as sig
@@ -47,7 +46,7 @@ formatter_hz = EngFormatter(unit="Hz")
 # Source: https://link.springer.com/chapter/10.1007/978-3-030-49256-4_11#Equ6
 
 N = 23  # number of filter stages
-# (goal: gain of at least 0.99 at 500 Hz)
+# (goal: gain of at least 0.99 at target frequency)
 
 filter_coeffs = np.zeros((N))
 filter_index = np.arange(N) - (N - 1) / 2
@@ -77,11 +76,12 @@ ax.set_xlabel("Coefficient index")
 # add the number of filter stages to the plot
 ax.text(0.05, 0.95, f"Number of filter stages: {N}", transform=ax.transAxes, fontsize=10, verticalalignment="top")
 
-fig.savefig("fig/hilbert-coeffs.pdf", bbox_inches="tight")
+# fig.savefig("fig/hilbert-coeffs.pdf", bbox_inches="tight")
+plt.show()
 
 
 N_plot = 4096
-target_frequency = 10e3  # Hz
+target_frequency = 20e3  # Hz
 
 # Find the frequency response of the Hilbert transformer
 sampling_rate = 128e3  # Hz
@@ -134,7 +134,8 @@ def plot_bode(f, h, title, filename, annotate=False):
     ax.set_ylabel("Gain")
     ax2.set_ylabel("Phase (deg)")
     ax.set_xlabel("Frequency")
-    fig.savefig(filename + ".pdf", bbox_inches="tight")
+    # fig.savefig(filename + ".pdf", bbox_inches="tight")
+    plt.show()
 
 
 # Plot the Bode plot of the Hilbert transformer
