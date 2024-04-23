@@ -37,7 +37,7 @@ Alternatively, you can use [NICEcontrol](https://github.com/thomabir/NICEcontrol
 - If you modify the `.c` code, simply re-run the build and compilation.
 - If you modify the `.sv` code without affecting the block diagram, then re-run generate bitstream in Vivado, and export the hardware. Then, in Vitis, locate the `Assistant` tab on the left, right-click on `design_1_wrapper`, and `Update hardware specification`. Seleclt the hardware you exportet in Vivado, by default called `design_1_wrapper.xsa`, and click `OK`. Then, re-run the build and compilation.
 - If you modify the block diagram, then you have to re-create the application project in Vitis IDE. See above. This is annoying, but I haven't found a better way yet. The reason is because when generating the example project, Vitis IDE also generates the `xparameters.h` file, which  contains the addresses of the registers of the custom IP blocks, which are generated when synthesizing the block diagram. So, if you change the block diagram, the addresses of the registers may change, and the `xparameters.h` file needs to be updated. This is done automatically when creating a new application project, and as far as I know cannot be done after a project has been created. (Update: the addresses are assigned deterministically as far as I've seen so far, so you may be able to guess the addresses without having to re-create the application project. No guarantee, though.)
-- 
+
 ## Debugging via UART
 
 All print statements from the Zynq are sent to the UART, which is transmitted over the USB connection between the Zynq and the computer.
