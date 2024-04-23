@@ -12,13 +12,15 @@
 2. Add the code to the `src` directory.
    1. Replace `echo.c` and `main.c` in the project with the files in this repository.
    2. Add `includes.h` from this repository to the `src` directory of the project.
-3. Add the compile flag `-lm` to the linker flags of the project.
+3. Set compiler and linker flags
    1. Locate on the `Explorer` tab on the left: `Explorer -> NICEfpga_system -> NICEfpga -> NICEfpga.prj`. Right-click on `NICEfpga.prj` and click on `Properties`.
-   2. In the pane on the left, select `C/C++ Build -> Settings -> ARM v7 gcc linker -> Libraries`.
-   3. Locate the tab named `Libraries (-l)`, click on the small green plus symbol on the right (`Add ...`) and enter `m`. Click `Ok` and `Apply and Close`.
+   2. In the pane on the left, select `C/C++ Build -> Settings`. On the top, set the configuration `Release` (as opposed to debug). Make sure it shows `Release [ Active ]` afterwards.
+   3. In the second pane from the left, select `ARM v7 gcc linker -> Libraries`. Locate the tab named `Libraries (-l)`, click on the small green plus symbol on the right (`Add ...`) and enter `m`. Click `Ok` and `Apply and Close`.
+   4. In the second pane from the left, select `ARM v7 gcc compiler -> Optimisation`. Set the `Optimization Level` to `Optimize most (-O3)`. Also, add `-Ofast` to other optimisation flags, since it's not an option in the menu above.
 4. Build and run the project.
    1. In the `Assistant` tab, locate `NICEfpga_system` and make sure it is selected.
    2. Click the hammer symbol in the `Assistant` tab to build the project, and then the green arrow symbol to run it. When running for the first time, select `Launch Hardware` in the dialog that appears. Afterwards, you can reuse the same configuration.
+   3. Make sure that you're on the `Release` build.
 
 The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.250`), and to port `RemotePort` (default: `12345`). To receive the data on the remote computer, use
 
@@ -34,8 +36,8 @@ Alternatively, you can use [NICEcontrol](https://github.com/thomabir/NICEcontrol
 
 - If you modify the `.c` code, simply re-run the build and compilation.
 - If you modify the `.sv` code without affecting the block diagram, then re-run generate bitstream in Vivado, and export the hardware. Then, in Vitis, locate the `Assistant` tab on the left, right-click on `design_1_wrapper`, and `Update hardware specification`. Seleclt the hardware you exportet in Vivado, by default called `design_1_wrapper.xsa`, and click `OK`. Then, re-run the build and compilation.
-- If you modify the block diagram, then you have to re-create the application project in Vitis IDE. See above. This is annoying, but I haven't found a better way yet. The reason is because when generating the example project, Vitis IDE also generates the `xparameters.h` file, which  contains the addresses of the registers of the custom IP blocks, which are generated when synthesizing the block diagram. So, if you change the block diagram, the addresses of the registers may change, and the `xparameters.h` file needs to be updated. This is done automatically when creating a new application project, and as far as I know cannot be done after a project has been created.
-
+- If you modify the block diagram, then you have to re-create the application project in Vitis IDE. See above. This is annoying, but I haven't found a better way yet. The reason is because when generating the example project, Vitis IDE also generates the `xparameters.h` file, which  contains the addresses of the registers of the custom IP blocks, which are generated when synthesizing the block diagram. So, if you change the block diagram, the addresses of the registers may change, and the `xparameters.h` file needs to be updated. This is done automatically when creating a new application project, and as far as I know cannot be done after a project has been created. (Update: the addresses are assigned deterministically as far as I've seen so far, so you may be able to guess the addresses without having to re-create the application project. No guarantee, though.)
+- 
 ## Debugging via UART
 
 All print statements from the Zynq are sent to the UART, which is transmitted over the USB connection between the Zynq and the computer.
