@@ -213,6 +213,7 @@ int main() {
   int32_t point_x1d_int, point_x2d_int, point_y1d_int, point_y2d_int; // pointing corrected
   
   prev_count_opd = 0;
+  prev_phase_d = 0.;
 
   xil_printf("Starting loop\n\r");
 
@@ -295,7 +296,6 @@ int main() {
       point_x2d_int = (int32_t)(point_x2d * 1000); // nm
       point_y1d_int = (int32_t)(point_y1d * 1000); // nm
       point_y2d_int = (int32_t)(point_y2d * 1000); // nm
-s
 
       // OPD
       phase_d = -atan2(y_opd, x_opd);
