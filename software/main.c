@@ -295,16 +295,17 @@ int main() {
       point_x2d_int = (int32_t)(point_x2d * 1000); // nm
       point_y1d_int = (int32_t)(point_y1d * 1000); // nm
       point_y2d_int = (int32_t)(point_y2d * 1000); // nm
-
+s
 
       // OPD
       phase_d = -atan2(y_opd, x_opd);
 
       // phase unwrapping
-      if (phase_d < prev_phase_d - PI) {
-        phase_d += 2 * PI;
-      } else if (phase_d > prev_phase_d + PI) {
+      while (phase_d - prev_phase_d > PI) {
         phase_d -= 2 * PI;
+      }
+      while (phase_d - prev_phase_d < -PI) {
+        phase_d += 2 * PI;
       }
 
       // set the previous phase to the current phase
