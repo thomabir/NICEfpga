@@ -60,10 +60,10 @@ module MainSV (
         .ch2_o(adc_shear2),
         .ch3_o(adc_shear3),
         .ch4_o(adc_shear4),
-        .ch5_o(adc_point1),
-        .ch6_o(adc_point2),
-        .ch7_o(adc_point3),
-        .ch8_o(adc_point4),
+        .ch5_o(adc_opd_ref),
+        .ch6_o(adc_sine_ref),
+        .ch7_o(),
+        .ch8_o(),
         .tick_o(adc1_tick)
     );
 
@@ -77,8 +77,8 @@ module MainSV (
         .din1(pmoda_i[3]),
         .din2(pmoda_i[4]),
         .din3(pmoda_i[5]),
-        .ch1_o(adc_sine_ref),
-        .ch2_o(adc_opd_ref),
+        .ch1_o(), // NC
+        .ch2_o(), // NC
         .ch3_o(), // NC
         .ch4_o(), // NC
         .ch5_o(), // NC
