@@ -13,10 +13,11 @@
    1. Replace `echo.c` and `main.c` in the project with the files in this repository.
    2. Add `includes.h` from this repository to the `src` directory of the project.
 3. Set compiler and linker flags
-   1. Locate on the `Explorer` tab on the left: `Explorer -> NICEfpga_system -> NICEfpga -> NICEfpga.prj`. Right-click on `NICEfpga.prj` and click on `Properties`.
-   2. In the pane on the left, select `C/C++ Build -> Settings`. On the top, set the configuration `Release` (as opposed to debug). Make sure it shows `Release [ Active ]` afterwards.
-   3. In the second pane from the left, select `ARM v7 gcc linker -> Libraries`. Locate the tab named `Libraries (-l)`, click on the small green plus symbol on the right (`Add ...`) and enter `m`. Click `Ok` and `Apply and Close`.
-   4. In the second pane from the left, select `ARM v7 gcc compiler -> Optimisation`. Set the `Optimization Level` to `Optimize most (-O3)`. Also, add `-Ofast` to other optimisation flags, since it's not an option in the menu above.
+   1. Set the `Release` configuration as active: In the Assistant pane, right-click on `Release`, then `Set Active`.
+   2. Locate on the `Explorer` tab on the left: `Explorer -> NICEfpga_system -> NICEfpga -> NICEfpga.prj`. Right-click on `NICEfpga.prj` and click on `Properties`.
+   3. In the pane on the left, select `C/C++ Build -> Settings`. On the top, set the configuration `Release` (as opposed to debug). Make sure it shows `Release [ Active ]` afterwards.
+   4. In the second pane from the left, select `ARM v7 gcc linker -> Libraries`. Locate the tab named `Libraries (-l)`, click on the small green plus symbol on the right (`Add ...`) and enter `m`. Click `Ok` and `Apply and Close`.
+   5. In the second pane from the left, select `ARM v7 gcc compiler -> Optimisation`. Set the `Optimization Level` to `Optimize most (-O3)`. Also, add `-Ofast` to other optimisation flags, since it's not an option in the menu above.
 4. Build and run the project.
    1. In the `Assistant` tab, locate `NICEfpga_system` and make sure it is selected.
    2. Click the hammer symbol in the `Assistant` tab to build the project, and then the green arrow symbol to run it. When running for the first time, select `Launch Hardware` in the dialog that appears. Afterwards, you can reuse the same configuration.
