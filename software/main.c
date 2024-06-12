@@ -73,7 +73,7 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 246);  // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 244);  // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -117,12 +117,10 @@ int main() {
   // shear: x1, y1, x2, y2
   // pointing: alpha1, beta1, alpha2, beta2
 
-
   // test data:
   // C0: 128 kHz sampling rate x 2 channel x 32 bits
   // + 1 x 32 bit counter
   // = 3 channels
-
 
   xil_printf("Initializing payload containers\n\r");
   // max payload size: 1500 bytes = 12000 bits = 375 int (32 bits each)
@@ -133,14 +131,9 @@ int main() {
   int pkg_no = 0;
   int vals_idx = 0;
 
-
   // current AXI GPIO setup:
   // gpio0 -> sync
   // gpio1 -> (OPD_x, OPD_y)
-
-  
-
-
 
   // activate the GPIOs, two channels each, data direction: read
   xil_printf("Initializing GPIO\n\r");
@@ -148,11 +141,11 @@ int main() {
   XGpio xgpio_in[num_xgpio_instances];
 
   for (int i = 0; i < num_xgpio_instances; i++) {
-      XGpio_Initialize(&xgpio_in[i], XPAR_AXI_GPIO_0_DEVICE_ID + i); // works in practice
-      XGpio_SetDataDirection(&xgpio_in[i], 1, 1); // (instance pointer, channel, direction mask)
-      if (i != 0) {
-        XGpio_SetDataDirection(&xgpio_in[i], 2, 1); // CH0 is single channel
-      }
+    XGpio_Initialize(&xgpio_in[i], XPAR_AXI_GPIO_0_DEVICE_ID + i);  // works in practice
+    XGpio_SetDataDirection(&xgpio_in[i], 1, 1);                     // (instance pointer, channel, direction mask)
+    if (i != 0) {
+      XGpio_SetDataDirection(&xgpio_in[i], 2, 1);  // CH0 is single channel
+    }
   }
 
   /* receive and process packets */
@@ -189,29 +182,28 @@ int main() {
   int32_t count_opd, prev_count_opd;
 
   // fpga: adc measurements
-  int32_t adc_shear1, adc_shear2, adc_shear3, adc_shear4; // shear
-  int32_t adc_point1, adc_point2, adc_point3, adc_point4; // pointing
-  int32_t adc_sine_ref, adc_opd_ref; // references
+  int32_t adc_shear1, adc_shear2, adc_shear3, adc_shear4;  // shear
+  int32_t adc_point1, adc_point2, adc_point3, adc_point4;  // pointing
+  int32_t adc_sine_ref, adc_opd_ref;                       // references
 
   // fpga: processed data
-  int32_t x_opd_int, y_opd_int; // opd
-  int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int, shear_i2_int; // shear
-  int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int, point_i2_int; // pointing
+  int32_t x_opd_int, y_opd_int;                                                                // opd
+  int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int, shear_i2_int;  // shear
+  int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int, point_i2_int;  // pointing
 
   // intermediate variables
-  double x_opd, y_opd, phase_d, prev_phase_d; // opd
-  double shear_x1, shear_x2, shear_y1, shear_y2, shear_i1, shear_i2; // shear
-  double shear_x1d, shear_x2d, shear_y1d, shear_y2d; // shear corrected
+  double x_opd, y_opd, phase_d, prev_phase_d;                         // opd
+  double shear_x1, shear_x2, shear_y1, shear_y2, shear_i1, shear_i2;  // shear
+  double shear_x1d, shear_x2d, shear_y1d, shear_y2d;                  // shear corrected
 
-  double point_x1, point_x2, point_y1, point_y2, point_i1, point_i2; // pointing
-  double point_x1d, point_x2d, point_y1d, point_y2d; // pointing corrected
-  
+  double point_x1, point_x2, point_y1, point_y2, point_i1, point_i2;  // pointing
+  double point_x1d, point_x2d, point_y1d, point_y2d;                  // pointing corrected
 
   // outputs to be sent to PC
-  int32_t phase_rad_int; // opd phase in rad
-  int32_t shear_x1d_int, shear_x2d_int, shear_y1d_int, shear_y2d_int; // shear corrected
-  int32_t point_x1d_int, point_x2d_int, point_y1d_int, point_y2d_int; // pointing corrected
-  
+  int32_t phase_rad_int;                                               // opd phase in rad
+  int32_t shear_x1d_int, shear_x2d_int, shear_y1d_int, shear_y2d_int;  // shear corrected
+  int32_t point_x1d_int, point_x2d_int, point_y1d_int, point_y2d_int;  // pointing corrected
+
   prev_count_opd = 0;
   prev_phase_d = 0.;
 
@@ -223,7 +215,6 @@ int main() {
 
     // if the counter has incremented, read the values
     if (count_opd == prev_count_opd + 1) {
-
       // read the values from the FPGA
       adc_shear1 = XGpio_DiscreteRead(&xgpio_in[1], 1);
       adc_shear2 = XGpio_DiscreteRead(&xgpio_in[1], 2);
@@ -272,30 +263,28 @@ int main() {
       point_y2 = (double)point_y2_int;  // y2
       point_i1 = (double)point_i1_int;  // i1
       point_i2 = (double)point_i2_int;  // i2
-      
 
       // Shear
-      shear_x1d = shear_x1 / shear_i1 * 1.11e3; // um
-      shear_x2d = shear_x2 / shear_i2 * 1.11e3; // um
-      shear_y1d = shear_y1 / shear_i1 * 1.11e3; // um
-      shear_y2d = shear_y2 / shear_i2 * 1.11e3; // um
+      shear_x1d = shear_x1 / shear_i1 * 1.11e3;  // um
+      shear_x2d = shear_x2 / shear_i2 * 1.11e3;  // um
+      shear_y1d = shear_y1 / shear_i1 * 1.11e3;  // um
+      shear_y2d = shear_y2 / shear_i2 * 1.11e3;  // um
 
-      shear_x1d_int = (int32_t)(shear_x1d * 1000); // nm
-      shear_x2d_int = (int32_t)(shear_x2d * 1000); // nm
-      shear_y1d_int = (int32_t)(shear_y1d * 1000); // nm
-      shear_y2d_int = (int32_t)(shear_y2d * 1000); // nm
-
+      shear_x1d_int = (int32_t)(shear_x1d * 1000);  // nm
+      shear_x2d_int = (int32_t)(shear_x2d * 1000);  // nm
+      shear_y1d_int = (int32_t)(shear_y1d * 1000);  // nm
+      shear_y2d_int = (int32_t)(shear_y2d * 1000);  // nm
 
       // Pointing
-      point_x1d = point_x1 / point_i1 * 1.11e3; // um
-      point_x2d = point_x2 / point_i2 * 1.11e3; // um
-      point_y1d = point_y1 / point_i1 * 1.11e3; // um
-      point_y2d = point_y2 / point_i2 * 1.11e3; // um
-      
-      point_x1d_int = (int32_t)(point_x1d * 1000); // nm
-      point_x2d_int = (int32_t)(point_x2d * 1000); // nm
-      point_y1d_int = (int32_t)(point_y1d * 1000); // nm
-      point_y2d_int = (int32_t)(point_y2d * 1000); // nm
+      point_x1d = point_x1 / point_i1 * 1.11e3;  // um
+      point_x2d = point_x2 / point_i2 * 1.11e3;  // um
+      point_y1d = point_y1 / point_i1 * 1.11e3;  // um
+      point_y2d = point_y2 / point_i2 * 1.11e3;  // um
+
+      point_x1d_int = (int32_t)(point_x1d * 1000);  // nm
+      point_x2d_int = (int32_t)(point_x2d * 1000);  // nm
+      point_y1d_int = (int32_t)(point_y1d * 1000);  // nm
+      point_y2d_int = (int32_t)(point_y2d * 1000);  // nm
 
       // OPD
       phase_d = -atan2(y_opd, x_opd);
@@ -348,7 +337,6 @@ int main() {
       payload[num_channels * vals_idx + 18] = point_y1d_int;
       payload[num_channels * vals_idx + 19] = point_y2d_int;
 
-
       /* Receive packets */
       // Deleting this somehow makes the sending stop working
       xemacif_input(echo_netif);
@@ -383,7 +371,6 @@ int main() {
 
     // set the previous counter to the current counter
     prev_count_opd = count_opd;
-
   }
 
   cleanup_platform();
