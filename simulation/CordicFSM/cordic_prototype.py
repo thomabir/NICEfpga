@@ -53,10 +53,14 @@ def get_range(n_bits):
 def cartesian_to_phi_cordic(x, y, n_iter=16):
     """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm.
 
-    phi is in the range [-2^n_bits + 1, 2^nbits], corresponding to [-pi + epsion, pi]."""
+    phi is in the range [-2^n_bits, 2^nbits - 1], corresponding to [-pi, pi - epsilon].
+    r is in the range [0, 2^n_bits - 1], corresponding to [0, 1]."""
 
     n_bits = n_iter
-    n_bits_extended = n_bits + 3  # to avoid overflow for internal variables
+
+    # To avoid overflow for internal variables, extend the number of internal bits by 1.
+    # This is necessary, as phi may initially overshoot during the calculation to be greater than pi.
+    n_bits_extended = n_bits + 1  
 
     # Initialize the CORDIC rotation table
     gammas = get_gamma(n_iter, n_bits)
@@ -73,7 +77,7 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
 
     # if (x,y) is on the left half-plane, flip it to the right half-plane, and keep track of the total rotation angle
     if x < 0:
-        if y >= 0:
+        if y > 0:
             phi = pi_fixed
         else:
             phi = -pi_fixed
@@ -82,10 +86,7 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
     # iterate the CORDIC algorithm
     for j in range(n_iter):
         # decide whether to rotate clockwise or counterclockwise
-        if y >= 0:
-            d = 1
-        else:
-            d = -1
+        d = 1 if y >= 0 else -1
 
         # apply the rotation matrix to the vector (x, y)
         x, y = x + (y >> j) * d, y - (x >> j) * d
@@ -107,7 +108,7 @@ def main():
     n_iter = 24
     n_bits = 24
 
-    phis_true = np.linspace(-np.pi + 1e-5, np.pi, 100)
+    phis_true = np.linspace(-np.pi, np.pi - 1e-6, 100)
     xs = np.cos(phis_true)
     ys = np.sin(phis_true)
 
