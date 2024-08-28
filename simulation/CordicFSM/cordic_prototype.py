@@ -69,6 +69,7 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
 
     # get pi in fixed point
     pi_fixed = float_to_fixed(1, n_bits)  # scale such that pi is the maximum number representable in n_bits
+    print(f"pi_fixed = {pi_fixed}")
 
     # assert starting values are in range
     min_val, max_val = get_range(n_bits)
@@ -111,8 +112,13 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
 def main():
     """Plot the CORDIC algorithm's output phi as a function of the true phi."""
 
+    
+
     n_iter = 24
     n_bits = 24
+
+    # gammas = get_gamma(n_iter=n_iter, n_bits=n_bits)
+    # print_verilog_array(gammas)
 
     phis_true = np.linspace(-np.pi, np.pi - 1e-6, 100)
     # phis_true = phis_true * 0 # for debugging

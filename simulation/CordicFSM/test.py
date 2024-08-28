@@ -15,7 +15,7 @@ async def cordic_test(dut):
 
     # generate array of phis
     n_tests = 10
-    phis_true_float = np.linspace(-np.pi / 2, 3 * np.pi / 2 - 0.001, n_tests)
+    phis_true_float = np.linspace(-np.pi , np.pi - 0.0001, n_tests)
     phis_cordic_python = np.zeros(n_tests)
     phis_cordic_sv = np.zeros(n_tests)
 
@@ -52,17 +52,18 @@ async def cordic_test(dut):
         phis_cordic_sv[i] = dut.phi_o.value.signed_integer
 
         # get the output from the Python implementation
-        phis_cordic_python[i] = cartesian_to_phi_cordic(x, y, n_iter=24)
+        phis_cordic_python[i], _ = cartesian_to_phi_cordic(x, y, n_iter=24)
 
         # check they are equal
         assert phis_cordic_sv[i] == phis_cordic_python[i]
+        print(f"phi_sv = {phis_cordic_sv[i]}, phi_python = {phis_cordic_python[i]}")
 
     # plot
-    # import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
 
-    # plt.plot(phis_true_float, phis_cordic_sv, label="CORDIC SV")
-    # plt.plot(phis_true_float, phis_cordic_python, label="CORDIC Python")
-    # plt.xlabel("True phi")
-    # plt.ylabel("Recovered phi")
-    # plt.legend()
-    # plt.show()
+    plt.plot(phis_true_float, phis_cordic_sv, label="CORDIC SV")
+    plt.plot(phis_true_float, phis_cordic_python, label="CORDIC Python")
+    plt.xlabel("True phi")
+    plt.ylabel("Recovered phi")
+    plt.legend()
+    plt.show()

@@ -1,7 +1,7 @@
 module CordicFSM #(
     parameter int BIT_WIDTH_IN = 24,
     parameter int BIT_WIDTH_OUT = 26,
-    parameter int PI = 26353586
+    parameter int PI = 8388607
 ) (
     input logic clk_i,  // clock
     input logic reset_i,  // reset
@@ -57,12 +57,13 @@ module CordicFSM #(
                 if (start_i) state_d.state = FLIP;
             end
 
-            // if x < 0, flip x and y, and initialise phi as PI
+            // if x < 0, flip x and y, and initialise phi correctly
             FLIP: begin
                 if (state_q.x < 0) begin
                     state_d.x = -state_q.x;
                     state_d.y = -state_q.y;
-                    state_d.phi = BIT_WIDTH_OUT'(PI);
+                    if (state_q.y > 0) state_d.phi = BIT_WIDTH_OUT'(PI);
+                    else state_d.phi = -BIT_WIDTH_OUT'(PI);
                 end
                 state_d.state = ITERATE;
             end
