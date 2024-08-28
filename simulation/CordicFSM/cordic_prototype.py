@@ -50,10 +50,10 @@ def get_range(n_bits):
     return min_val, max_val
 
 
-def cartesian_to_phi_cordic(x, y, n_iter=16, pi_fixed=26353586):
+def cartesian_to_phi_cordic(x, y, n_iter=16):
     """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm.
 
-    phi is in the range [-1, 1], corresponding to [-pi, pi]."""
+    phi is in the range [-2^n_bits + 1, 2^nbits], corresponding to [-pi + epsion, pi]."""
 
     n_bits = n_iter
     n_bits_extended = n_bits + 3  # to avoid overflow for internal variables
@@ -111,19 +111,11 @@ def main():
     xs = np.cos(phis_true)
     ys = np.sin(phis_true)
 
-    # print gamma
-    gammas = get_gamma(n_iter, n_bits)
-    print_verilog_array(gammas)
-
-    # print PI
-    pi_fixed = float_to_fixed(np.pi, n_bits)
-    print(f"pi_fixed = {pi_fixed}")
-
     phis = np.zeros(len(phis_true))
     for i in range(len(phis_true)):
         x = float_to_fixed(xs[i], n_bits)
         y = float_to_fixed(ys[i], n_bits)
-        phis[i], _ = cartesian_to_phi_cordic(x, y, n_iter, pi_fixed)
+        phis[i], _ = cartesian_to_phi_cordic(x, y, n_iter)
         phis[i] = fixed_to_float(phis[i], n_bits) * np.pi
 
     # plot with residuals underneath
