@@ -69,7 +69,6 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
 
     # get pi in fixed point
     pi_fixed = float_to_fixed(1, n_bits)  # scale such that pi is the maximum number representable in n_bits
-    print(f"pi_fixed = {pi_fixed}")
 
     # assert starting values are in range
     min_val, max_val = get_range(n_bits)
@@ -99,12 +98,6 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
         min_val, max_val = get_range(n_bits_extended)
         for var in [x, y, phi]:
             assert min_val <= var <= max_val
-
-    # correct for gain of CORDIC algorithm
-    # A = Product[1/Sqrt[1 + 2^(-2 i)], {i, 0, n_iter - 1}]
-    # A = 0.60725293500888269443 for n_iter = 24
-    A = np.prod([1 / np.sqrt(1 + 2 ** (-2 * i)) for i in range(n_iter)])
-    x = x * A
 
     return phi, x
 
@@ -136,7 +129,16 @@ def main():
         x = float_to_fixed(xs[i], n_bits)
         y = float_to_fixed(ys[i], n_bits)
         phis[i], rs[i] = cartesian_to_phi_cordic(x, y, n_iter)
+
+        # convert to floating point and scale
         phis[i] = fixed_to_float(phis[i], n_bits) * np.pi
+
+        # convert to floating point and correct for gain of CORDIC algorithm
+        # A = 0.60725293500888269443 for n_iter = 24
+        A = np.prod([1 / np.sqrt(1 + 2 ** (-2 * i)) for i in range(n_iter)])
+        rs[i] = fixed_to_float(rs[i], n_bits) * A
+
+    
 
     # plot with residuals underneath
     _, axs = plt.subplots(2, 1, sharex=True)
@@ -153,7 +155,6 @@ def main():
     rs = rs[idx]
     rs_true = rs_true[idx]
     # convert to floating point
-    rs = [fixed_to_float(r, n_bits) for r in rs]
 
     # fit a line between the two and print the slope and offset
     # slope, offset = np.polyfit(rs_true, rs, 1)
