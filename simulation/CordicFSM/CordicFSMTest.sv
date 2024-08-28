@@ -5,6 +5,7 @@ module CordicFSMTest (
     input logic signed [23:0] sin_i,  // sine
     input logic signed [23:0] cos_i,  // cosine
     output logic signed [26:0] phi_o,  // phase
+    output logic signed [24:0] r_o,  // radius
     output logic done_o  // computation is done, result is valid
 );
 
@@ -22,6 +23,7 @@ module CordicFSMTest (
         .cos_i(cos_i),
         .angle_table(angle_table),
         .phi_o(phi_o),
+        .r_o(r_o),
         .done_o(done_o)
     );
 endmodule

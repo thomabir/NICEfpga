@@ -10,6 +10,7 @@ module CordicFSM #(
     input logic signed [BIT_WIDTH_IN-1:0] cos_i,  // cosine
     input logic signed [BIT_WIDTH_IN-1:0] angle_table[BIT_WIDTH_IN],  // angle table
     output logic signed [BIT_WIDTH_OUT-1:0] phi_o,  // phase
+    output logic signed [BIT_WIDTH_IN:0] r_o,  // radius
     output logic done_o  // computation is done, result is valid
 );
 
@@ -31,6 +32,7 @@ module CordicFSM #(
         logic signed [BIT_WIDTH_IN:0] y;  // y coordinate
         logic signed [BIT_WIDTH_OUT-1:0] phi;  // phase
         logic signed [BIT_WIDTH_OUT-1:0] phi_final;  // final phase, always valid
+        logic signed [BIT_WIDTH_IN:0] r_final;  // final radius, always valid
     } state_t;
 
     state_t state_d;
@@ -74,6 +76,7 @@ module CordicFSM #(
 
                     // final phase: state_d.phi_final = MSB of state_q.phi
                     state_d.phi_final = state_q.phi;
+                    state_d.r_final = state_q.x;
                 end
                 else begin
                     if (state_q.y >= 0) begin
@@ -103,6 +106,7 @@ module CordicFSM #(
 
         // output signals
         phi_o = state_q.phi_final;
+        r_o = state_q.r_final;
         done_o = (state_q.state == DONE);
 
 
