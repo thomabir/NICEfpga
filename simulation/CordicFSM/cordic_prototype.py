@@ -1,4 +1,4 @@
-"""Goal: Understand the CORDIC algorithm that takes as input sin(phi) and cos(phi) and outputs phi."""
+"""Goal: Understand the CORDIC algorithm that takes as input x = r * sin(phi) and y = r * cos(phi) and outputs r and phi."""
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -25,7 +25,7 @@ def get_gamma(n_iter=16, n_bits=16):
 
     # convert to fixed point
     for i in range(n_iter):
-        gamma[i] = float_to_fixed(gamma[i], n_bits)
+        gamma[i] = float_to_fixed(gamma[i] / np.pi, n_bits)
 
     return gamma
 
@@ -51,7 +51,9 @@ def get_range(n_bits):
 
 
 def cartesian_to_phi_cordic(x, y, n_iter=16, pi_fixed=26353586):
-    """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm."""
+    """Converts x = sin(phi) and y = cos(phi) to phi = arctan(y/x) using the CORDIC algorithm.
+
+    phi is in the range [-1, 1], corresponding to [-pi, pi]."""
 
     n_bits = n_iter
     n_bits_extended = n_bits + 3  # to avoid overflow for internal variables
@@ -60,19 +62,22 @@ def cartesian_to_phi_cordic(x, y, n_iter=16, pi_fixed=26353586):
     gammas = get_gamma(n_iter, n_bits)
 
     # get pi in fixed point
-    pi_fixed = float_to_fixed(np.pi, n_bits)
+    pi_fixed = float_to_fixed(np.pi / np.pi, n_bits)  # scale such that pi is the maximum number representable in n_bits
 
     # assert starting values are in range
     min_val, max_val = get_range(n_bits)
-    for var in [x, y]:
+    for var in [x, y, pi_fixed]:
         assert min_val <= var <= max_val
 
     phi = 0
 
     # if (x,y) is on the left half-plane, flip it to the right half-plane, and keep track of the total rotation angle
     if x < 0:
+        if y >= 0:
+            phi = pi_fixed
+        else:
+            phi = -pi_fixed
         x, y = -x, -y
-        phi = pi_fixed
 
     # iterate the CORDIC algorithm
     for j in range(n_iter):
@@ -93,7 +98,7 @@ def cartesian_to_phi_cordic(x, y, n_iter=16, pi_fixed=26353586):
         for var in [x, y, phi]:
             assert min_val <= var <= max_val
 
-    return phi
+    return phi, x
 
 
 def main():
@@ -102,7 +107,7 @@ def main():
     n_iter = 24
     n_bits = 24
 
-    phis_true = np.linspace(-np.pi / 2, np.pi * 3 / 2 - 1e-5, 100)
+    phis_true = np.linspace(-np.pi + 1e-5, np.pi, 100)
     xs = np.cos(phis_true)
     ys = np.sin(phis_true)
 
@@ -118,8 +123,8 @@ def main():
     for i in range(len(phis_true)):
         x = float_to_fixed(xs[i], n_bits)
         y = float_to_fixed(ys[i], n_bits)
-        phis[i] = cartesian_to_phi_cordic(x, y, n_iter, pi_fixed)
-        phis[i] = fixed_to_float(phis[i], n_bits)
+        phis[i], _ = cartesian_to_phi_cordic(x, y, n_iter, pi_fixed)
+        phis[i] = fixed_to_float(phis[i], n_bits) * np.pi
 
     # plot with residuals underneath
     _, axs = plt.subplots(2, 1, sharex=True)
