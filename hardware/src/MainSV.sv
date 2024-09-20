@@ -77,10 +77,10 @@ module MainSV (
         .din1(pmoda_i[3]),
         .din2(pmoda_i[4]),
         .din3(pmoda_i[5]),
-        .ch1_o(), // NC
-        .ch2_o(), // NC
-        .ch3_o(), // NC
-        .ch4_o(), // NC
+        .ch1_o(adc_point1), // NC
+        .ch2_o(adc_point2), // NC
+        .ch3_o(adc_point3), // NC
+        .ch4_o(adc_point4), // NC
         .ch5_o(), // NC
         .ch6_o(), // NC
         .ch7_o(), // NC
