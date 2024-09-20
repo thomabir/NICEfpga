@@ -38,7 +38,7 @@ def float_to_fixed_arr(arr, n_bits=16):
 fs = 64000  # Sampling frequency in Hz
 f0 = 500  # Lower cutoff frequency in Hz
 f1 = 2000  # Upper cutoff frequency in Hz
-order = 2  # Filter order
+order = 1  # Filter order
 
 # Design the Butterworth filter
 num, denom = signal.butter(order, [f0, f1], fs=fs, btype="band")
@@ -52,7 +52,7 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
 fig.suptitle("IIR Bandpass Filter Response")
 
 # Plot the amplitude response
-ax1.semilogy(frequencies, abs(h), "b", label="Ideal")
+ax1.loglog(frequencies, abs(h), "b", label="Ideal")
 ax1.set_ylabel("Gain")
 ax1.set_xlabel("Frequency (Hz)")
 ax1.grid()
@@ -60,7 +60,7 @@ ax1.grid()
 # Plot the time delay (from phase response)
 phases = np.unwrap(np.angle(h))
 delays = phases / (2 * np.pi * frequencies)
-ax2.plot(frequencies, delays * 1e3, "b")
+ax2.semilogx(frequencies, delays * 1e3, "b")
 ax2.set_ylabel("Delay (ms)")
 ax2.set_xlabel("Frequency (Hz)")
 ax2.grid()

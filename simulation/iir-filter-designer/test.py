@@ -39,10 +39,10 @@ async def test_white(dut):
     dt_ns_approx = np.round(dt_ns / 10) * 10  # sampling interval, rounded to nearest 10 ns, ns
     t = np.arange(n_steps) * dt
 
-    # offset = 0.5
-    # signal_i = 0.2 * np.sin(2 * np.pi * 10e3 * t) + offset
+    offset = 0.0
+    signal_i = 0.2 * np.sin(2 * np.pi * 1e3 * t) + offset
     # signal_i = white_noise(n_steps, dc=offset, std=0.1)
-    signal_i = np.ones(n_steps) / 10
+    # signal_i = np.ones(n_steps) / 10
     signal_i[0:20] = 0
     signal_i_int = np.round(signal_i * (2**23 - 1))
 
