@@ -132,6 +132,8 @@ vivado -mode batch -source make.tcl -nojournal -nolog
 To delete all the generated files and start over:
 
 ```sh
+rm -rf .Xil
+rm -rf build
 rm -rf prj
 rm -rf NA
 rm -rf ip # delete the IP directory (contains auto-generated files)
