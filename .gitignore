@@ -1,12 +1,23 @@
 # -----------------
 # Custom
 # -----------------
-__pycache__/
+*.pdf
+*.hwdef
+
+# -----------------
+# Verilator
+# -----------------
 sim_build/
 *.vcd
 results.xml
-*.pdf
-*.hwdef
+
+# -----------------
+# Vivado
+# -----------------
+prj/
+NA/
+ip/
+.Xil
 *.str
 *.jou
 *.log
@@ -43,8 +54,10 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-
-
+# -----------------
+# Python
+# -----------------
+__pycache__/
 
 # -----------------
 # C
