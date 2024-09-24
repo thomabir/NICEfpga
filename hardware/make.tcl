@@ -17,4 +17,4 @@ launch_runs impl_1 -to_step write_bitstream -jobs 6
 wait_on_runs -runs impl_1
 
 # Export hardware
-write_hw_platform -fixed -include_bit -force -file /home/nice-user/code/Vivado-build-test/build/design_1_wrapper.xsa
+write_hw_platform -fixed -include_bit -force -file build/design_1_wrapper.xsa
