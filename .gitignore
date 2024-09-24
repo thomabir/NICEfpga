@@ -17,6 +17,7 @@ results.xml
 prj/
 NA/
 ip/
+build/
 .Xil
 *.str
 *.jou
