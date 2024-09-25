@@ -21,7 +21,6 @@
 #include "sleep.h"
 #include "xgpio.h"
 #include "xil_cache.h"
-#include "xspips.h"
 
 #define PI 3.14159265359
 
@@ -73,7 +72,7 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 244);  // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88, 243);  // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -86,9 +85,6 @@ int main() {
     return -1;
   }
   netif_set_default(echo_netif);
-
-  /* now enable interrupts */
-  platform_enable_interrupts();
 
   /* specify that the network if is up */
   netif_set_up(echo_netif);
@@ -141,8 +137,8 @@ int main() {
   XGpio xgpio_in[num_xgpio_instances];
 
   for (int i = 0; i < num_xgpio_instances; i++) {
-    XGpio_Initialize(&xgpio_in[i], XPAR_AXI_GPIO_0_DEVICE_ID + i);  // works in practice
-    XGpio_SetDataDirection(&xgpio_in[i], 1, 1);                     // (instance pointer, channel, direction mask)
+    XGpio_Initialize(&xgpio_in[i], XPAR_XGPIO_0_BASEADDR + i * 0x10000);  // works in practice
+    XGpio_SetDataDirection(&xgpio_in[i], 1, 1);                           // (instance pointer, channel, direction mask)
     if (i != 0) {
       XGpio_SetDataDirection(&xgpio_in[i], 2, 1);  // CH0 is single channel
     }

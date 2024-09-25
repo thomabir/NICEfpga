@@ -55,13 +55,14 @@ The following instructions are used to create the project from scratch, without 
    4. Add the following IP blocks with the `+` symbol on the toolbar:
       - `ZYNQ7 Processing System`
       - 13 times: `AXI GPIO` (from `axi_gpio_0` to `axi_gpio_12`)
-   5. Double-click on each of the 13 `axi_gpio`, and configure them:
+   5. Double-click on the Zynq processing system, select the tab `MIO Configuration`, expand `Application Processor Unit`, and enable the tick boxes `Timer 0` and `Timer 1`. Then click on `OK`. This is probably necessary to avoid a bug of the new 2024 Xilinx toolchain, see the forum discussions [here](https://adaptivesupport.amd.com/s/question/0D54U00007uv6AvSAI/vitis-unified-ide-202320-fails-to-build-new-freertos-platform-with-cmake-error?language=en_US) and [here](https://adaptivesupport.amd.com/s/question/0D54U00008LEi5jSAD/freertos-running-on-zedboard-has-tick-rate-twice-as-fast?language=en_US).
+   6. Double-click on each of the 13 `axi_gpio`, and configure them:
       - Select the tab `IP Configuration`.
       - Under `GPIO`, enable `All Inputs` and `Enable Dual Channel`. Exception: don't enable `Enable Dual Channel` for `axi_gpio_0`.
       - Under `GPIO 2`, enable `All Inputs`. Exception: don't enable `All Inputs` for `axi_gpio_0` (shpuld be greyed out for `GPIO2`).
       - Click on `OK`.
       - In the block design, expand the output pins by clicking on the small plus-sign next `GPIO` and `GPIO2`.
-   6. Connect each `axi_gpio` to its corresponding pin on `MainV_0` by clicking on the pin stub next to each pin name and dragging the wire to the corresponding `axi_gpio` block. Use the following list for the correspondances:
+   7. Connect each `axi_gpio` to its corresponding pin on `MainV_0` by clicking on the pin stub next to each pin name and dragging the wire to the corresponding `axi_gpio` block. Use the following list for the correspondances:
       - `axi_gpio_0`: GPIO: `counter`, GPIO2: does not exist
       - `axi_gpio_1`: GPIO: `adc_shear1`, GPIO2: `adc_shear2`
       - `axi_gpio_2`: GPIO: `adc_shear3`, GPIO2: `adc_shear4`
@@ -75,17 +76,17 @@ The following instructions are used to create the project from scratch, without 
       - `axi_gpio_10`: GPIO: `point_x1`, GPIO2: `point_x2`
       - `axi_gpio_11`: GPIO: `point_y1`, GPIO2: `point_y2`
       - `axi_gpio_12`: GPIO: `point_i1`, GPIO2: `point_i2`
-   7. Make the following pins of `MainV_0` external (select the small stub of wire next to each pin name in the block design and hit Ctrl-T)
+   8. Make the following pins of `MainV_0` external (select the small stub of wire next to each pin name in the block design and hit Ctrl-T)
       - `sw[1:0]`
       - `btn[3:0]`
       - `pmodb[7:0]`
       - `pmoda[7:0]`
       - `led[3:0]`
       - Note that a trailing `_0` has to be removed from all the external pin names.
-   8. Click on `Run Block Automation` in the toolbar, then click on `OK`.
-   9. Click on `Run Connection Automation` in the toolbar, enable all connections, then click on `OK`.
-   10. Click on `Regenerate Layout` in the toolbar to make the block design easier to inspect by eye.
-   11. Click on `Validate Design` in the toolbar, then click on `OK`. No errors or warnings should be present.
+   9. Click on `Run Block Automation` in the toolbar, then click on `OK`.
+   10. Click on `Run Connection Automation` in the toolbar, enable all connections, then click on `OK`.
+   11. Click on `Regenerate Layout` in the toolbar to make the block design easier to inspect by eye.
+   12. Click on `Validate Design` in the toolbar, then click on `OK`. No errors or warnings should be present.
 5. **Create the HDL wrapper**
    1. In the sources tab, right-click on `design_1 (design_1.bd)` and click on `Create HDL Wrapper`.
    2. Select `Let Vivado manage wrapper and auto-update`.

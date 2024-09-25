@@ -2,6 +2,8 @@
 
 ## Use
 
+Make sure `make` is installed (e.g. `sudo apt install make`).
+
 1. Create a new application project in Vitis IDE.
    1. Click `Create Application Project`.
    2. Ignore the welcome page, click `Next`.
