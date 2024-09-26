@@ -57,7 +57,7 @@ for n, index in enumerate(filter_index):
         filter_coeffs[n] = 1 / (index * np.pi) * (1 - np.cos(index * np.pi))
 
 # apply a blackman window to the filter coefficients
-filter_coeffs = filter_coeffs * sig.blackman(N)
+filter_coeffs = filter_coeffs * np.blackman(N)
 
 # generate filter coefficients of a delay by (N-1)/2 samples
 delay_coeffs = np.zeros((N))

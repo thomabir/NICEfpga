@@ -53,7 +53,7 @@ weight_bands = weight[::2]
 num_stages_fir_filter = 61
 
 # use firls to design the filter
-fir_filter = sig.firls(num_stages_fir_filter, f, desired_gain, weight_bands, fs=fs)
+fir_filter = sig.firls(numtaps=num_stages_fir_filter, bands=f, desired=desired_gain, weight=weight_bands, fs=fs)
 
 
 # get h for plotting
