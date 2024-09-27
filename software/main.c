@@ -286,12 +286,12 @@ int main() {
       phase_d = -atan2(y_opd, x_opd);
 
       // phase unwrapping
-      while (phase_d - prev_phase_d > PI) {
-        phase_d -= 2 * PI;
-      }
-      while (phase_d - prev_phase_d < -PI) {
-        phase_d += 2 * PI;
-      }
+        while (phase_d - prev_phase_d > PI) {
+          phase_d -= 2 * PI;
+        }
+        while (phase_d - prev_phase_d < -PI) {
+          phase_d += 2 * PI;
+        }
 
       // set the previous phase to the current phase
       prev_phase_d = phase_d;
