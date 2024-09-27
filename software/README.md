@@ -4,26 +4,19 @@
 
 Make sure `make` is installed (e.g. `sudo apt install make`).
 
-1. Create a new application project in Vitis IDE.
-   1. Click `Create Application Project`.
-   2. Ignore the welcome page, click `Next`.
-   3. Select `Create a new plaform from hardware (XSA)`, then `Browse`, and select the `.xsa` file you created previously by synthesizing the files in the `../hardware` directory. The default path is `~/code/NICEfpga/NICEfpga-vivado/design_1_wrapper.xsa`. Click `Open`, then `Next`.
-   4. Enter the Application project name `NICEfpga`, click `Next`.
-   5. Keep the default domain: `standalone_ps7_cortexa9_0`. CLick `Next`.
-   6. Select the `lwIP Echo Server` template. Click `Finish`.
+1. Create a new application project in Vitis Unified IDE. TODO Explain in detail.
 2. Add the code to the `src` directory.
    1. Replace `echo.c` and `main.c` in the project with the files in this repository.
    2. Add `includes.h` from this repository to the `src` directory of the project.
-3. Set compiler and linker flags
-   1. Set the `Release` configuration as active: In the Assistant pane, right-click on `Release`, then `Set Active`.
-   2. Locate on the `Explorer` tab on the left: `Explorer -> NICEfpga_system -> NICEfpga -> NICEfpga.prj`. Right-click on `NICEfpga.prj` and click on `Properties`.
-   3. In the pane on the left, select `C/C++ Build -> Settings`. On the top, set the configuration `Release` (as opposed to debug). Make sure it shows `Release [ Active ]` afterwards.
-   4. In the second pane from the left, select `ARM v7 gcc linker -> Libraries`. Locate the tab named `Libraries (-l)`, click on the small green plus symbol on the right (`Add ...`) and enter `m`. Click `Ok` and `Apply and Close`.
-   5. In the second pane from the left, select `ARM v7 gcc compiler -> Optimisation`. Set the `Optimization Level` to `Optimize most (-O3)`. Also, add `-Ofast` to other optimisation flags, since it's not an option in the menu above.
-4. Build and run the project.
-   1. In the `Assistant` tab, locate `NICEfpga_system` and make sure it is selected.
-   2. Click the hammer symbol in the `Assistant` tab to build the project, and then the green arrow symbol to run it. When running for the first time, select `Launch Hardware` in the dialog that appears. Afterwards, you can reuse the same configuration.
-   3. Make sure that you're on the `Release` build.
+3. Configure the project and compiler settings
+   1. In the Navigation pane, expand the `niceFPGA` application, click on `Settings -> launch.json`.
+   2. Under `Bitstream File`, select `${workspaceFolder}/platform/hw/sdt/design_1_wrapper.bit`. This is necessary such that changes in the FPGA design are reflected in the software. This is a [known bug](https://adaptivesupport.amd.com/s/question/0D54U00008GmLxbSAF/workaround-updating-hardware-specifications-in-a-vitis-unified-project-using-xsa-doesnt-work?language=en_US) in Vitis and may be fixed in the future.
+   3. In the Navigation pane, click on `niceFPGA [Application] -> Settings -> UserConfig.cmake`.
+   4. Under `Compiler Settings -> Optimization`, select `-O3` and add `-ofast` under `Other optimization flags`. This enables the highest level of optimization.
+   5. Under `Linker Settings -> Libraries`, add `m` to load the math library.
+4. Build and run the project
+   1. In the `Flow` pane on the left select the  `NICEfpga` component.
+   2. Click on `Build` to build the project, and then on `Run` to run it.
 
 The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.250`), and to port `RemotePort` (default: `12345`). To receive the data on the remote computer, use
 
@@ -37,9 +30,21 @@ Alternatively, you can use [NICEcontrol](https://github.com/thomabir/NICEcontrol
 
 ## How to update when code changes
 
-- If you modify the `.c` code, simply re-run the build and compilation.
-- If you modify the `.sv` code without affecting the block diagram, then re-run generate bitstream in Vivado, and export the hardware. Then, in Vitis, locate the `Assistant` tab on the left, right-click on `design_1_wrapper`, and `Update hardware specification`. Seleclt the hardware you exportet in Vivado, by default called `design_1_wrapper.xsa`, and click `OK`. Then, re-run the build and compilation.
-- If you modify the block diagram, then you have to re-create the application project in Vitis IDE. See above. This is annoying, but I haven't found a better way yet. The reason is because when generating the example project, Vitis IDE also generates the `xparameters.h` file, which  contains the addresses of the registers of the custom IP blocks, which are generated when synthesizing the block diagram. So, if you change the block diagram, the addresses of the registers may change, and the `xparameters.h` file needs to be updated. This is done automatically when creating a new application project, and as far as I know cannot be done after a project has been created. (Update: the addresses are assigned deterministically as far as I've seen so far, so you may be able to guess the addresses without having to re-create the application project. No guarantee, though.)
+### If you modify the `.c` code
+
+Restart from step 4 above.
+
+### If you modify the `.sv` code, but not the block design
+
+1. Re-run generate bitstream in Vivado, and export the hardware (`.xsa` file).
+2. In Vitis, in the navigation pane, click on `platfom [Platform] -> Settings -> vitis-comp.json`.
+3. In the top-level settings (`platform`), click on `Switch XSA` and select the new `.xsa` file.
+4. (The following path may change, you may have to look around a bit in the settings.) In the settings, navigate to `platform -> ps7_cortexa9_1 -> test -> Board Support Package`. There, click on `Regenerate BSP`.
+4. Go to step 4 under "Use" above.
+
+### If you modify the block design
+
+If you modify the block diagram, then you have to re-create the application project in Vitis IDE, starting from step 1 im "Use" above. This is annoying, but I haven't found a better way yet. The reason is because when generating the example project, Vitis IDE also generates the `xparameters.h` file, which  contains the addresses of the registers of the custom IP blocks, which are generated when synthesizing the block diagram. So, if you change the block diagram, the addresses of the registers may change, and the `xparameters.h` file needs to be updated. This is done automatically when creating a new application project, and as far as I know cannot be done after a project has been created. (Update: the addresses are assigned deterministically as far as I've seen so far, so you may be able to guess the addresses without having to re-create the application project. No guarantee, though.)
 
 ## Debugging via UART
 
