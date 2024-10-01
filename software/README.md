@@ -14,9 +14,9 @@ Make sure `make` is installed (e.g. `sudo apt install make`).
    3. In the Navigation pane, click on `niceFPGA [Application] -> Settings -> UserConfig.cmake`.
    4. Under `Compiler Settings -> Optimization`, select `-O3` and add `-ofast` under `Other optimization flags`. This enables the highest level of optimization.
    5. Under `Linker Settings -> Libraries`, add `m` to load the math library.
-4. Build and run the project
-   1. In the `Flow` pane on the left select the  `NICEfpga` component.
-   2. Click on `Build` to build the project, and then on `Run` to run it.
+4. Build and run the platform and the project
+   1. In the `Flow` pane on the left select the `Platform` component, and click on `Build` to build the platform.
+   2. In the `Flow` pane on the left select the `NICEfpga` component. Click on `Build` to build the project, and then on `Run` to run it.
 
 The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.250`), and to port `RemotePort` (default: `12345`). To receive the data on the remote computer, use
 
