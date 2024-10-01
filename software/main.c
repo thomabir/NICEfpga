@@ -183,7 +183,7 @@ int main() {
   int32_t adc_sine_ref, adc_opd_ref;                       // references
 
   // fpga: processed data
-  int32_t x_opd_int, y_opd_int;                                                                // opd
+  int32_t phi_opd_int;                                                               // opd
   int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int, shear_i2_int;  // shear
   int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int, point_i2_int;  // pointing
 
@@ -225,8 +225,8 @@ int main() {
       adc_sine_ref = XGpio_DiscreteRead(&xgpio_in[5], 1);
       adc_opd_ref = XGpio_DiscreteRead(&xgpio_in[5], 2);
 
-      x_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 1);
-      y_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 2);
+      phi_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 1);
+      // r_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 2);
 
       shear_x1_int = XGpio_DiscreteRead(&xgpio_in[7], 1);
       shear_x2_int = XGpio_DiscreteRead(&xgpio_in[7], 2);
@@ -241,10 +241,6 @@ int main() {
       point_y2_int = XGpio_DiscreteRead(&xgpio_in[11], 2);
       point_i1_int = XGpio_DiscreteRead(&xgpio_in[12], 1);
       point_i2_int = XGpio_DiscreteRead(&xgpio_in[12], 2);
-
-      // cast to doubles for calculations
-      x_opd = (double)x_opd_int;
-      y_opd = (double)y_opd_int;
 
       shear_x1 = (double)shear_x1_int;  // x1
       shear_x2 = (double)shear_x2_int;  // x2
@@ -282,23 +278,6 @@ int main() {
       point_y1d_int = (int32_t)(point_y1d * 1000);  // nm
       point_y2d_int = (int32_t)(point_y2d * 1000);  // nm
 
-      // OPD
-      phase_d = -atan2(y_opd, x_opd);
-
-      // phase unwrapping
-        while (phase_d - prev_phase_d > PI) {
-          phase_d -= 2 * PI;
-        }
-        while (phase_d - prev_phase_d < -PI) {
-          phase_d += 2 * PI;
-        }
-
-      // set the previous phase to the current phase
-      prev_phase_d = phase_d;
-
-      // convert to fixed point for sending
-      phase_rad_int = (int32_t)(phase_d * 10000);  // 0.1 mrad = 0.006 deg precision
-
       // assemble the payload
 
       // counter
@@ -319,7 +298,7 @@ int main() {
       payload[num_channels * vals_idx + 10] = adc_opd_ref;
 
       // opd
-      payload[num_channels * vals_idx + 11] = phase_rad_int;
+      payload[num_channels * vals_idx + 11] = phi_opd_int;
 
       // shear
       payload[num_channels * vals_idx + 12] = shear_x1d_int;
