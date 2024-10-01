@@ -19,8 +19,8 @@ module MainSV (
     output logic signed [31:0] adc_opd_ref,
 
     // processed opd
-    output logic signed [31:0] opd_x,
-    output logic signed [31:0] opd_y,
+    output logic signed [31:0] opd_phi,
+    output logic signed [31:0] opd_r,
 
     // processed shear
     output logic signed [31:0] shear_x1,
@@ -218,6 +218,28 @@ module MainSV (
         .x_o(opd_x),
         .y_o(opd_y),
         .done_o(opd_done_o)
+    );
+
+    logic signed [23:0] angle_table[24] = '{2097151, 1238020, 654136, 332049, 166669, 83415, 41718, 20860, 10430, 5215, 2607, 1303, 651, 325, 162, 81, 40, 20, 10, 5, 2, 1, 0, 0};
+
+    logic signed [26:0] opd_phi; // phase
+    logic signed [24:0] opd_r; // radius
+    logic opd_cordic_done_o;
+
+    CordicFSM #(
+        .BIT_WIDTH_IN(24),
+        .BIT_WIDTH_OUT(27),
+        .PI(8388607)
+    ) dut (
+        .clk_i(clk_i),
+        .start_i(opd_done_o),
+        .reset_i(reset_i),
+        .sin_i(opd_x),
+        .cos_i(opd_y),
+        .angle_table(angle_table),
+        .phi_o(opd_phi),
+        .r_o(opd_r),
+        .done_o(opd_cordic_done_o)
     );
 
 
