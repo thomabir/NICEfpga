@@ -208,6 +208,8 @@ module MainSV (
 
     // lock-in amplifier
     logic opd_done_o;
+    logic signed [23:0] opd_x;
+    logic signed [23:0] opd_y;
 
     LockInAmplifier opd_lockin (
         .clk_i(clk),
@@ -222,24 +224,22 @@ module MainSV (
 
     logic signed [23:0] angle_table[24] = '{2097151, 1238020, 654136, 332049, 166669, 83415, 41718, 20860, 10430, 5215, 2607, 1303, 651, 325, 162, 81, 40, 20, 10, 5, 2, 1, 0, 0};
 
-    logic signed [26:0] opd_phi; // phase
-    logic signed [24:0] opd_r; // radius
-    logic opd_cordic_done_o;
+    logic opd_cordic_done;
 
     CordicFSM #(
         .BIT_WIDTH_IN(24),
         .BIT_WIDTH_OUT(27),
         .PI(8388607)
     ) dut (
-        .clk_i(clk_i),
+        .clk_i(clk),
         .start_i(opd_done_o),
-        .reset_i(reset_i),
-        .sin_i(opd_x),
-        .cos_i(opd_y),
+        .reset_i(reset),
+        .sin_i(opd_y),
+        .cos_i(opd_x),
         .angle_table(angle_table),
         .phi_o(opd_phi),
         .r_o(opd_r),
-        .done_o(opd_cordic_done_o)
+        .done_o(opd_cordic_done)
     );
 
 
