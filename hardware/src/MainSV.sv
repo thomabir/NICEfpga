@@ -228,7 +228,7 @@ module MainSV (
 
     CordicFSM #(
         .BIT_WIDTH_IN(24),
-        .BIT_WIDTH_OUT(27),
+        .BIT_WIDTH_OUT(32),
         .PI(8388607)
     ) dut (
         .clk_i(clk),
