@@ -76,6 +76,7 @@ The following instructions are used to create the project from scratch, without 
       - `axi_gpio_10`: GPIO: `point_x1`, GPIO2: `point_x2`
       - `axi_gpio_11`: GPIO: `point_y1`, GPIO2: `point_y2`
       - `axi_gpio_12`: GPIO: `point_i1`, GPIO2: `point_i2`
+      - `axi_gpio_13`: GPIO: `adc_sci_null`, GPIO2: `adc_sci_mod`
    8. Make the following pins of `MainV_0` external (select the small stub of wire next to each pin name in the block design and hit Ctrl-T)
       - `sw[1:0]`
       - `btn[3:0]`

@@ -6,7 +6,7 @@ module MainSV (
     input logic [7:0] pmoda_i,
     output logic [3:0] led_o,
 
-    // ADC raw data
+    // ADC metrology signals
     output logic signed [31:0] adc_shear1,
     output logic signed [31:0] adc_shear2,
     output logic signed [31:0] adc_shear3,
@@ -17,6 +17,10 @@ module MainSV (
     output logic signed [31:0] adc_point4,
     output logic signed [31:0] adc_sine_ref,
     output logic signed [31:0] adc_opd_ref,
+
+    // ADC science signals
+    output logic signed [31:0] adc_sci_null,
+    output logic signed [31:0] adc_sci_mod,
 
     // processed opd
     output logic signed [31:0] opd_phi,
@@ -62,8 +66,8 @@ module MainSV (
         .ch4_o(adc_shear4),
         .ch5_o(adc_opd_ref),
         .ch6_o(adc_sine_ref),
-        .ch7_o(),
-        .ch8_o(),
+        .ch7_o(adc_sci_null),
+        .ch8_o(adc_sci_mod),
         .tick_o(adc1_tick)
     );
 

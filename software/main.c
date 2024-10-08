@@ -120,7 +120,7 @@ int main() {
 
   xil_printf("Initializing payload containers\n\r");
   // max payload size: 1500 bytes = 12000 bits = 375 int (32 bits each)
-  const int num_channels = 20;
+  const int num_channels = 22;
   const int num_timepoints = 10;
   int payload_size = num_channels * num_timepoints;
   int payload[payload_size];
@@ -133,7 +133,7 @@ int main() {
 
   // activate the GPIOs, two channels each, data direction: read
   xil_printf("Initializing GPIO\n\r");
-  const int num_xgpio_instances = 13;
+  const int num_xgpio_instances = 14;
   XGpio xgpio_in[num_xgpio_instances];
 
   for (int i = 0; i < num_xgpio_instances; i++) {
@@ -181,6 +181,7 @@ int main() {
   int32_t adc_shear1, adc_shear2, adc_shear3, adc_shear4;  // shear
   int32_t adc_point1, adc_point2, adc_point3, adc_point4;  // pointing
   int32_t adc_sine_ref, adc_opd_ref;                       // references
+  int32_t adc_sci_null, adc_sci_mod;                        // science beam
 
   // fpga: processed data
   int32_t phi_opd_int;                                                               // opd
@@ -242,6 +243,9 @@ int main() {
       point_i1_int = XGpio_DiscreteRead(&xgpio_in[12], 1);
       point_i2_int = XGpio_DiscreteRead(&xgpio_in[12], 2);
 
+      adc_sci_null = XGpio_DiscreteRead(&xgpio_in[13], 1);
+      adc_sci_mod = XGpio_DiscreteRead(&xgpio_in[13], 2);
+
       shear_x1 = (double)shear_x1_int;  // x1
       shear_x2 = (double)shear_x2_int;  // x2
       shear_y1 = (double)shear_y1_int;  // y1
@@ -283,7 +287,7 @@ int main() {
       // counter
       payload[num_channels * vals_idx] = count_opd;
 
-      // adc readings
+      // adc readings metrology
       payload[num_channels * vals_idx + 1] = adc_shear1;
       payload[num_channels * vals_idx + 2] = adc_shear2;
       payload[num_channels * vals_idx + 3] = adc_shear3;
@@ -311,6 +315,10 @@ int main() {
       payload[num_channels * vals_idx + 17] = point_x2d_int;
       payload[num_channels * vals_idx + 18] = point_y1d_int;
       payload[num_channels * vals_idx + 19] = point_y2d_int;
+
+      // adc readings science beam
+      payload[num_channels * vals_idx + 20] = adc_sci_null;
+      payload[num_channels * vals_idx + 21] = adc_sci_mod;
 
       /* Receive packets */
       // Deleting this somehow makes the sending stop working

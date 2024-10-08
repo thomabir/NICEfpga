@@ -17,6 +17,9 @@ module MainV(
     output [31:0] adc_sine_ref,
     output [31:0] adc_opd_ref,
 
+    output [31:0] adc_sci_null,
+    output [31:0] adc_sci_mod,
+
     output [31:0] opd_x,
     output [31:0] opd_y,
 
@@ -53,6 +56,8 @@ module MainV(
         .adc_point4(adc_point4),
         .adc_sine_ref(adc_sine_ref),
         .adc_opd_ref(adc_opd_ref),
+        .adc_sci_null(adc_sci_null),
+        .adc_sci_mod(adc_sci_mod),
         .opd_phi(opd_x),
         .opd_r(opd_y),
         .shear_x1(shear_x1),
