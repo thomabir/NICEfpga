@@ -147,6 +147,17 @@ To delete only the runs (for re-compiling):
 rm -rf prj/prj.runs
 ```
 
+## Modify project
+
+To open a project in GUI mode:
+
+```sh
+cd NICEfpga/hardware
+vivado -mode tcl
+open_project prj/prj.xpr
+start_gui
+```
+
 ## How to update when code changes
 
 - In GUI mode, restart from step "Compile the design", and re-export the hardware.
