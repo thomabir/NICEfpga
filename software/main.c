@@ -181,10 +181,10 @@ int main() {
   int32_t adc_shear1, adc_shear2, adc_shear3, adc_shear4;  // shear
   int32_t adc_point1, adc_point2, adc_point3, adc_point4;  // pointing
   int32_t adc_sine_ref, adc_opd_ref;                       // references
-  int32_t adc_sci_null, adc_sci_mod;                        // science beam
+  int32_t adc_sci_null, adc_sci_mod;                       // science beam
 
   // fpga: processed data
-  int32_t phi_opd_int;                                                               // opd
+  int32_t phi_opd_int;                                                                         // opd
   int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int, shear_i2_int;  // shear
   int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int, point_i2_int;  // pointing
 
@@ -343,10 +343,11 @@ int main() {
         // increase the package number
         pkg_no++;
 
-        // print "*" every 128k readings (= 1s)
-        if (pkg_no % 12800 == 0) {
-          xil_printf("*");
-        }
+        // Warning: Uncommenting the below may cause missing samples
+        // Print a "*" to the terminal once every second
+        // if (pkg_no % 12800 == 0) {
+        //   xil_printf("*");
+        // }
       } else {
         vals_idx++;
       }
