@@ -173,6 +173,9 @@ int main() {
   /* Save the PCB to the global variable */
   send_pcb = *pcb;
 
+  // initialise send buffer
+  psnd = pbuf_alloc(PBUF_TRANSPORT, payload_size * sizeof(int), PBUF_REF);
+
   // counters
   int32_t count_opd, prev_count_opd;
 
@@ -329,12 +332,12 @@ int main() {
         // xil_printf("Package %d\n\r", pkg_no);
 
         // set the payload to the phases array
-        psnd = pbuf_alloc(PBUF_TRANSPORT, payload_size * sizeof(int), PBUF_REF);
+
         psnd->payload = &payload;
 
         // send the package
         udpsenderr = udp_sendto(&send_pcb, psnd, &RemoteAddr, RemotePort);
-        pbuf_free(psnd);
+        // pbuf_free(psnd);
 
         // reset the vals_idx
         vals_idx = 0;
