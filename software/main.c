@@ -65,7 +65,6 @@ int main() {
 
   /* Use the same structure for the server and the echo server */
   echo_netif = &server_netif;
-  init_platform();
 
   /* initialize IP addresses to be used */
   IP4_ADDR(&ipaddr, 192, 168, 88, 253);
@@ -325,7 +324,7 @@ int main() {
       xemacif_input(echo_netif);
 
       // if payload is full, send it
-      if (vals_idx == 9) {
+      if (vals_idx == num_timepoints - 1) {
         // print the package number
         // xil_printf("Package %d\n\r", pkg_no);
 
