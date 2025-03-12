@@ -1,4 +1,5 @@
 """This module calculates the filter coefficients for a generic IIR filter."""
+
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal

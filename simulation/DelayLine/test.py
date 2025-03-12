@@ -1,4 +1,5 @@
 """Tests for the delay line module in combination with the Hilbert transformer."""
+
 import cocotb
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,7 +37,9 @@ async def test_white(dut):
     fs = 64e3  # sampling rate, Hz
     dt = 1 / fs  # sampling interval, s
     dt_ns = dt * 1e9  # sampling interval, ns
-    dt_ns_approx = np.round(dt_ns / 10) * 10  # sampling interval, rounded to nearest 10 ns, ns
+    dt_ns_approx = (
+        np.round(dt_ns / 10) * 10
+    )  # sampling interval, rounded to nearest 10 ns, ns
     t = np.arange(n_steps) * dt
 
     offset = 0.0  # InputFilter already subtract the DC offset

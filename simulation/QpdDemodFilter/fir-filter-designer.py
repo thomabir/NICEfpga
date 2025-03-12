@@ -1,4 +1,5 @@
 """This module calculates the filter coefficients for the FIR lowpass filter in the QPD Demodulator."""
+
 import os
 
 import matplotlib.pyplot as plt

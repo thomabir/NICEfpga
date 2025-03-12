@@ -1,4 +1,5 @@
 """This module calculates the filter coefficients for the FIR bandpass input filter."""
+
 import os
 
 import matplotlib.pyplot as plt
@@ -34,9 +35,9 @@ desired_gain[(f >= f1) & (f <= f2)] = 1
 
 weight = np.zeros(len(f))
 weight[(f <= 0.5 * f1)] = 0.05
-weight[(f <= 2e3)] = 1.
+weight[(f <= 2e3)] = 1.0
 weight[(f >= f1) & (f <= f2)] = 1
-weight[(f >= 1.3*f2)] = 0.05
+weight[(f >= 1.3 * f2)] = 0.05
 
 # remove every second element from weight
 weight_bands = weight[::2]
@@ -44,7 +45,13 @@ weight_bands = weight[::2]
 num_stages_fir_filter = 71
 
 # use firls to design the filter
-fir_filter = sig.firls(numtaps=num_stages_fir_filter, bands=f, desired=desired_gain, weight=weight_bands, fs=fs)
+fir_filter = sig.firls(
+    numtaps=num_stages_fir_filter,
+    bands=f,
+    desired=desired_gain,
+    weight=weight_bands,
+    fs=fs,
+)
 
 
 # get h for plotting

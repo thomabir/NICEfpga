@@ -8,17 +8,17 @@ module LockInAmplifierTest (
     output logic [23:0] y_o
 );
 
-    LockInAmplifier #(
-        .NUM_BITS(24)
-    ) lock_in_amplifier (
-        .clk_i(clk_i),
-        .reset_i(reset_i),
-        .tick_i(tick_i),
-        .ch1_i(ch1_i),
-        .ch2_i(ch2_i),
-        .x_o(x_o),
-        .y_o(y_o),
-        .done_o()
-    );
+  LockInAmplifier #(
+      .NUM_BITS(24)
+  ) lock_in_amplifier (
+      .clk_i(clk_i),
+      .reset_i(reset_i),
+      .tick_i(tick_i),
+      .ch1_i(ch1_i),
+      .ch2_i(ch2_i),
+      .x_o(x_o),
+      .y_o(y_o),
+      .done_o()
+  );
 
 endmodule

@@ -6,11 +6,11 @@ module LockInLowPassTest (
     output logic signed [32:0] signal_o
 );
 
-    LockInLowPass lowpass1 (
-        .clk_i(clk_i),
-        .tick_i(tick_i),
-        .signal_i(signal_i),
-        .signal_o(signal_o),
-        .done_o()
-    );
+  LockInLowPass lowpass1 (
+      .clk_i(clk_i),
+      .tick_i(tick_i),
+      .signal_i(signal_i),
+      .signal_o(signal_o),
+      .done_o()
+  );
 endmodule

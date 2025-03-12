@@ -369,7 +369,7 @@ if { [get_files [list MainV.v]] == "" } {
 
 # Proc to create BD design_1
 proc cr_bd_design_1 { parentCell } {
-# The design that will be created by this Tcl proc contains the following 
+# The design that will be created by this Tcl proc contains the following
 # module references:
 # MainV
 
@@ -388,7 +388,7 @@ proc cr_bd_design_1 { parentCell } {
   ##################################################################
   set bCheckIPs 1
   if { $bCheckIPs == 1 } {
-     set list_check_ips "\ 
+     set list_check_ips "\
   xilinx.com:ip:processing_system7:5.5\
   xilinx.com:ip:axi_gpio:2.0\
   xilinx.com:ip:proc_sys_reset:5.0\
@@ -416,7 +416,7 @@ proc cr_bd_design_1 { parentCell } {
   ##################################################################
   set bCheckModules 1
   if { $bCheckModules == 1 } {
-     set list_check_mods "\ 
+     set list_check_mods "\
   MainV\
   "
 
@@ -491,7 +491,7 @@ proc cr_bd_design_1 { parentCell } {
      catch {common::send_gid_msg -ssname BD::TCL -id 2096 -severity "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-  
+
   # Create instance: processing_system7_0, and set properties
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0 ]
   set_property -dict [list \
@@ -1327,13 +1327,13 @@ pagesize -pg 1 -db -bbox -sgen -130 0 1450 2920
 
   validate_bd_design
   save_bd_design
-  close_bd_design $design_name 
+  close_bd_design $design_name
 }
 # End of cr_bd_design_1()
 
 cr_bd_design_1 ""
-set_property REGISTERED_WITH_MANAGER "1" [get_files design_1.bd ] 
-set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files design_1.bd ] 
+set_property REGISTERED_WITH_MANAGER "1" [get_files design_1.bd ]
+set_property SYNTH_CHECKPOINT_MODE "Hierarchical" [get_files design_1.bd ]
 
 set idrFlowPropertiesConstraints ""
 catch {

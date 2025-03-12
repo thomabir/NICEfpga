@@ -1,7 +1,8 @@
 """An IIR filter implemented in Python"""
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+
 
 def iir(input, num, denom):
     """Apply an IIR filter to an input signal. Only uses fixed-point arithmetic.
@@ -10,17 +11,17 @@ def iir(input, num, denom):
         input (list): Input signal.
         num (list): Numerator coefficients.
         denom (list): Denominator coefficients.
-    
+
     Returns:
         list: Filtered signal.
     """
 
     P = len(num)
     Q = len(denom)
-    n = len(num) - 1 # index of the last element in the input vector
+    n = len(num) - 1  # index of the last element in the input vector
 
     # Initialize the state
-    
+
     state = np.zeros(n + 1, dtype=int)
 
     # Initialize the output signal

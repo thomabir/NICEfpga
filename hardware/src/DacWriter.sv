@@ -16,26 +16,26 @@ module DacWriter (
 );
 
 
-    logic unsigned [15:0] data_calibrated;
-    assign data_calibrated = 16'($unsigned(
-            data_i
-        ) + 16'h8000);  // convert from signed to unsigned with offset
-    //    assign data_calibrated = 16'b1000000000000000;
+  logic unsigned [15:0] data_calibrated;
+  assign data_calibrated = 16'($unsigned(
+          data_i
+      ) + 16'h8000);  // convert from signed to unsigned with offset
+  //    assign data_calibrated = 16'b1000000000000000;
 
-    // Initialize the SPI controller
-    SpiController #(
-        .CLOCK_DIVIDE(2),
-        .FRAME_WIDTH(16)
-    ) spi_controller (
-        .clk_i(clk_i),
-        .reset_i(reset_i),
-        .start_i(start_i),
-        .is_idle_o(is_idle_o),
-        .spi_sclk_o(spi_sclk_o),
-        .spi_mosi_o(spi_mosi_o),
-        .spi_cs_o(spi_cs_o),
-        .data_i(data_calibrated)
-    );
+  // Initialize the SPI controller
+  SpiController #(
+      .CLOCK_DIVIDE(2),
+      .FRAME_WIDTH(16)
+  ) spi_controller (
+      .clk_i(clk_i),
+      .reset_i(reset_i),
+      .start_i(start_i),
+      .is_idle_o(is_idle_o),
+      .spi_sclk_o(spi_sclk_o),
+      .spi_mosi_o(spi_mosi_o),
+      .spi_cs_o(spi_cs_o),
+      .data_i(data_calibrated)
+  );
 
 
 endmodule

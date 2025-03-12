@@ -5,18 +5,18 @@
 Make sure `make` is installed (e.g. `sudo apt install make`).
 
 1. Create a new application project in Vitis Unified IDE. TODO Explain in detail.
-2. Add the code to the `src` directory.
+1. Add the code to the `src` directory.
    1. Replace `echo.c` and `main.c` in the project with the files in this repository.
-   2. Add `includes.h` from this repository to the `src` directory of the project.
-3. Configure the project and compiler settings
+   1. Add `includes.h` from this repository to the `src` directory of the project.
+1. Configure the project and compiler settings
    1. In the Navigation pane, expand the `niceFPGA` application, click on `Settings -> launch.json`.
-   2. Under `Bitstream File`, select `${workspaceFolder}/platform/hw/sdt/design_1_wrapper.bit`. This is necessary such that changes in the FPGA design are reflected in the software. This is a [known bug](https://adaptivesupport.amd.com/s/question/0D54U00008GmLxbSAF/workaround-updating-hardware-specifications-in-a-vitis-unified-project-using-xsa-doesnt-work?language=en_US) in Vitis and may be fixed in the future.
-   3. In the Navigation pane, click on `niceFPGA [Application] -> Settings -> UserConfig.cmake`.
-   4. Under `Compiler Settings -> Optimization`, select `-O3` and add `-ofast` under `Other optimization flags`. This enables the highest level of optimization.
-   5. Under `Linker Settings -> Libraries`, add `m` to load the math library.
-4. Build and run the platform and the project
+   1. Under `Bitstream File`, select `${workspaceFolder}/platform/hw/sdt/design_1_wrapper.bit`. This is necessary such that changes in the FPGA design are reflected in the software. This is a [known bug](https://adaptivesupport.amd.com/s/question/0D54U00008GmLxbSAF/workaround-updating-hardware-specifications-in-a-vitis-unified-project-using-xsa-doesnt-work?language=en_US) in Vitis and may be fixed in the future.
+   1. In the Navigation pane, click on `niceFPGA [Application] -> Settings -> UserConfig.cmake`.
+   1. Under `Compiler Settings -> Optimization`, select `-O3` and add `-ofast` under `Other optimization flags`. This enables the highest level of optimization.
+   1. Under `Linker Settings -> Libraries`, add `m` to load the math library.
+1. Build and run the platform and the project
    1. In the `Flow` pane on the left select the `Platform` component, and click on `Build` to build the platform.
-   2. In the `Flow` pane on the left select the `NICEfpga` component. Click on `Build` to build the project, and then on `Run` to run it.
+   1. In the `Flow` pane on the left select the `NICEfpga` component. Click on `Build` to build the project, and then on `Run` to run it.
 
 The Zynq will now send UDP packets to the IP address defined in `main.c`, variable `RemoteAddr` (default: `192.168.88.250`), and to port `RemotePort` (default: `12345`). To receive the data on the remote computer, use
 
@@ -37,10 +37,10 @@ Restart from step 4 above.
 ### If you modify the `.sv` code, but not the block design
 
 1. Re-run generate bitstream in Vivado, and export the hardware (`.xsa` file).
-2. In Vitis, in the navigation pane, click on `platfom [Platform] -> Settings -> vitis-comp.json`.
-3. In the top-level settings (`platform`), click on `Switch XSA` and select the new `.xsa` file.
-4. (The following path may change, you may have to look around a bit in the settings.) In the settings, navigate to `platform -> ps7_cortexa9_1 -> test -> Board Support Package`. There, click on `Regenerate BSP`.
-4. Go to step 4 under "Use" above.
+1. In Vitis, in the navigation pane, click on `platfom [Platform] -> Settings -> vitis-comp.json`.
+1. In the top-level settings (`platform`), click on `Switch XSA` and select the new `.xsa` file.
+1. (The following path may change, you may have to look around a bit in the settings.) In the settings, navigate to `platform -> ps7_cortexa9_1 -> test -> Board Support Package`. There, click on `Regenerate BSP`.
+1. Go to step 4 under "Use" above.
 
 ### If you modify the block design
 

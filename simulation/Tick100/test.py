@@ -1,4 +1,5 @@
 """Tests the Tick100 module"""
+
 import cocotb
 import numpy as np
 from cocotb.clock import Clock

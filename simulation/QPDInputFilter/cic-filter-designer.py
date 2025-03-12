@@ -120,7 +120,9 @@ ax.set_xlabel("Frequency (Hz)")
 fig.savefig("02-cic-decimator-freq-response-zoom.pdf", bbox_inches="tight")
 
 
-freqResponseCompensation = 1 / np.abs(H(fn_1 / decimationRatio, decimationRatio, order))  # ** 2
+freqResponseCompensation = 1 / np.abs(
+    H(fn_1 / decimationRatio, decimationRatio, order)
+)  # ** 2
 
 # add a high frequency cut-off
 pass_high_freq = 280  # Hz
@@ -155,7 +157,9 @@ idx_passband = np.logical_and(f_weight > pass_low_freq, f_weight < pass_high_fre
 weight[idx_passband] = 1
 weight[f_weight > high_block_freq] = 1
 # compFilter = sig.firwin2(num_stages_compFilter, fn_1, freqResponseCompensation, fs=fsn_1)
-compFilter = sig.firls(num_stages_compFilter, fn_2, freqResponseCompensation, fs=fsn_2, weight=weight)
+compFilter = sig.firls(
+    num_stages_compFilter, fn_2, freqResponseCompensation, fs=fsn_2, weight=weight
+)
 
 # Plot compensation filter and weight
 

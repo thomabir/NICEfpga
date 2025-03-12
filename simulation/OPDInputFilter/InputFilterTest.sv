@@ -6,13 +6,13 @@ module InputFilterTest (
     output logic [23:0] signal_o
 );
 
-    InputFilter filt (
-        .clk_i  (clk_i),
-        .reset_i(reset_i),
-        .tick_i (tick_i),
-        .data_i (signal_i),
-        .data_o (signal_o),
-        .tick_o ()
-    );
+  InputFilter filt (
+      .clk_i  (clk_i),
+      .reset_i(reset_i),
+      .tick_i (tick_i),
+      .data_i (signal_i),
+      .data_o (signal_o),
+      .tick_o ()
+  );
 
 endmodule

@@ -1,4 +1,5 @@
 """Tests for the input bandpass filter."""
+
 import cocotb
 import matplotlib.pyplot as plt
 import numpy as np

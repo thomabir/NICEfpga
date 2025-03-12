@@ -1,4 +1,5 @@
 """This module calculates the filter coefficients for an FIR low pass filter."""
+
 import os
 
 import matplotlib.pyplot as plt
@@ -41,7 +42,7 @@ f = np.linspace(0, fs / 2, 1000)
 
 desired_gain = np.zeros(len(f))
 desired_gain[f < f1] = 1
-desired_gain[f > f2] = 0.
+desired_gain[f > f2] = 0.0
 
 weight = np.zeros(len(f))
 weight[(f < f1)] = 1
@@ -53,7 +54,13 @@ weight_bands = weight[::2]
 num_stages_fir_filter = 61
 
 # use firls to design the filter
-fir_filter = sig.firls(numtaps=num_stages_fir_filter, bands=f, desired=desired_gain, weight=weight_bands, fs=fs)
+fir_filter = sig.firls(
+    numtaps=num_stages_fir_filter,
+    bands=f,
+    desired=desired_gain,
+    weight=weight_bands,
+    fs=fs,
+)
 
 
 # get h for plotting

@@ -68,7 +68,9 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
     gammas = get_gamma(n_iter, n_bits)
 
     # get pi in fixed point
-    pi_fixed = float_to_fixed(1, n_bits)  # scale such that pi is the maximum number representable in n_bits
+    pi_fixed = float_to_fixed(
+        1, n_bits
+    )  # scale such that pi is the maximum number representable in n_bits
 
     # assert starting values are in range
     min_val, max_val = get_range(n_bits)
@@ -105,8 +107,6 @@ def cartesian_to_phi_cordic(x, y, n_iter=16):
 def main():
     """Plot the CORDIC algorithm's output phi as a function of the true phi."""
 
-    
-
     n_iter = 24
     n_bits = 24
 
@@ -137,8 +137,6 @@ def main():
         # A = 0.60725293500888269443 for n_iter = 24
         A = np.prod([1 / np.sqrt(1 + 2 ** (-2 * i)) for i in range(n_iter)])
         rs[i] = fixed_to_float(rs[i], n_bits) * A
-
-    
 
     # plot with residuals underneath
     _, axs = plt.subplots(2, 1, sharex=True)

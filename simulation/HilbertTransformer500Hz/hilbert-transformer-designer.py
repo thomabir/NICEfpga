@@ -75,7 +75,14 @@ ax.set_ylabel("Coefficient value")
 ax.set_xlabel("Coefficient index")
 
 # add the number of filter stages to the plot
-ax.text(0.05, 0.95, f"Number of filter stages: {N}", transform=ax.transAxes, fontsize=10, verticalalignment="top")
+ax.text(
+    0.05,
+    0.95,
+    f"Number of filter stages: {N}",
+    transform=ax.transAxes,
+    fontsize=10,
+    verticalalignment="top",
+)
 
 fig.savefig("fig/hilbert-coeffs.pdf", bbox_inches="tight")
 
@@ -138,7 +145,9 @@ def plot_bode(f, h, title, filename, annotate=False):
 
 
 # Plot the Bode plot of the Hilbert transformer
-plot_bode(f_w, h_causal, "Bode plot of the Hilbert transformer", "fig/hilbert-bode-causal")
+plot_bode(
+    f_w, h_causal, "Bode plot of the Hilbert transformer", "fig/hilbert-bode-causal"
+)
 
 # Bode plot of the delay line
 plot_bode(f_w, h_delay, "Bode plot of the delay line", "fig/bode-delay")

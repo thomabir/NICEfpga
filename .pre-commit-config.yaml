@@ -2,44 +2,26 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
 
-# general
-# aaa
+# General
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-yaml
     -   id: check-added-large-files
+    -   id: check-case-conflict
+    -   id: check-illegal-windows-names
+    -   id: check-toml
+    -   id: check-yaml
+        args:
+            - --allow-multiple-documents
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
 
 # Python
--   repo: local
-    hooks:
-    -   id: system
-        name: PyLint
-        entry: python -m pylint.__main__
-        language: system
-        files: \.py$
-        args:
-            - --enable=F,E,W,C,R
-            - --max-line-length=120
-            - --variable-naming-style=any
-            - --const-naming-style=any
-            - --argument-naming-style=any
-            - --module-naming-style=any
-            - --ignore-long-lines=^\s*(#\s*)?<?https?://\S+>?$
-            # - --disable=C,R,E0401
-            - --disable=C0301
-
--   repo: https://github.com/psf/black
-    rev: 23.7.0
-    hooks:
-      - id: black
-
--   repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-    -   id: isort
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.6.9
+  hooks:
+    - id: ruff # Run the linter.
+    - id: ruff-format # Run the formatter.
 
 # Verilog
 -   repo: local
@@ -50,9 +32,9 @@ repos:
         language: system
         files: \.sv$
         args:
-            - --column_limit=100
-            - --indentation_spaces=4
-            - --wrap_spaces=4
+            # - --column_limit=120
+            # - --indentation_spaces=2
+            # - --wrap_spaces=4
             - --inplace
             - --assignment_statement_alignment=flush-left
             - --case_items_alignment=flush-left
@@ -62,9 +44,9 @@ repos:
             - --formal_parameters_alignment=flush-left
             - --module_net_variable_alignment=flush-left
             - --named_parameter_alignment=flush-left
-            - --named_parameter_indentation=indent
+            # - --named_parameter_indentation=indent
             - --port_declarations_alignment=flush-left
-            - --port_declarations_indentation=indent
+            # - --port_declarations_indentation=indent
             - --struct_union_members_alignment=flush-left
             - --wrap_end_else_clauses=1
 
@@ -75,10 +57,13 @@ repos:
         entry: verible-verilog-lint
         language: system
         files: \.sv$
+        # args:
+        #     - --line-length=120
 
 # C/C++
 -   repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v16.0.4
+    rev: v19.1.7
+    files: \.(c|h|cc|cpp|hpp)$
     hooks:
     -   id: clang-format
 

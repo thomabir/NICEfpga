@@ -14,50 +14,50 @@ module CompensatedCICFilter #(
     output logic done_o
 );
 
-    // internal signals
-    logic tick_reduced;
-    logic signed [NUM_BITS_IN-1:0] dec_out;
+  // internal signals
+  logic tick_reduced;
+  logic signed [NUM_BITS_IN-1:0] dec_out;
 
-    // decimator
-    CICDecimator #(
-        .NUM_STAGES(CIC_STAGES),
-        .DECIMATION_FACTOR(CIC_DECIMATION),
-        .NUM_BITS_INPUT(NUM_BITS_IN),
-        .NUM_BITS_OUTPUT(NUM_BITS_IN)
-    ) dec1 (
-        .clk_i(clk_i),
-        .reset_i(reset_i),
-        .tick_i(tick_i),
-        .signal_i(data_i),
-        .signal_o(dec_out),
-        .tick_reduced_o(tick_reduced)
-    );
+  // decimator
+  CICDecimator #(
+      .NUM_STAGES(CIC_STAGES),
+      .DECIMATION_FACTOR(CIC_DECIMATION),
+      .NUM_BITS_INPUT(NUM_BITS_IN),
+      .NUM_BITS_OUTPUT(NUM_BITS_IN)
+  ) dec1 (
+      .clk_i(clk_i),
+      .reset_i(reset_i),
+      .tick_i(tick_i),
+      .signal_i(data_i),
+      .signal_o(dec_out),
+      .tick_reduced_o(tick_reduced)
+  );
 
-    // compensation filter
-    FIRFilter #(
-        .COEFF_LENGTH(COEFF_LENGTH),
-        .BITWIDTH(NUM_BITS_IN)
-    ) fir1 (
-        .clk_i(clk_i),
-        .tick_i(tick_reduced),
-        .signal_i(dec_out),
-        .signal_o(data_o),
-        .coeff(coeff),
-        .done_o(done_o)
-    );
+  // compensation filter
+  FIRFilter #(
+      .COEFF_LENGTH(COEFF_LENGTH),
+      .BITWIDTH(NUM_BITS_IN)
+  ) fir1 (
+      .clk_i(clk_i),
+      .tick_i(tick_reduced),
+      .signal_i(dec_out),
+      .signal_o(data_o),
+      .coeff(coeff),
+      .done_o(done_o)
+  );
 
-    // CICInterpolator #(
-    //     .num_of_stages(CIC_STAGES),
-    //     .interpolation_factor(CIC_DECIMATION),
-    //     .num_bits_input(NUM_BITS_IN),
-    //     .NUM_BITS_OUT(NUM_BITS_OUT)
-    // ) interpolator1 (
-    //     .clk_i(clk_i),
-    //     .reset_i(reset_i),
-    //     .tick_reduced_i(tick_reduced),
-    //     .tick_i(tick_i),
-    //     .signal_i(fir_out),
-    //     .signal_o(interp_out)
-    // );
+  // CICInterpolator #(
+  //     .num_of_stages(CIC_STAGES),
+  //     .interpolation_factor(CIC_DECIMATION),
+  //     .num_bits_input(NUM_BITS_IN),
+  //     .NUM_BITS_OUT(NUM_BITS_OUT)
+  // ) interpolator1 (
+  //     .clk_i(clk_i),
+  //     .reset_i(reset_i),
+  //     .tick_reduced_i(tick_reduced),
+  //     .tick_i(tick_i),
+  //     .signal_i(fir_out),
+  //     .signal_o(interp_out)
+  // );
 
 endmodule

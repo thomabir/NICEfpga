@@ -44,10 +44,12 @@ struct udp_pcb send_pcb;
 
 void print_ip(char *msg, struct ip4_addr *ip) {
   print(msg);
-  xil_printf("%d.%d.%d.%d\n\r", ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip), ip4_addr4(ip));
+  xil_printf("%d.%d.%d.%d\n\r", ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip),
+             ip4_addr4(ip));
 }
 
-void print_ip_settings(struct ip4_addr *ip, struct ip4_addr *mask, struct ip4_addr *gw) {
+void print_ip_settings(struct ip4_addr *ip, struct ip4_addr *mask,
+                       struct ip4_addr *gw) {
   print_ip("Board IP: ", ip);
   print_ip("Netmask : ", mask);
   print_ip("Gateway : ", gw);
@@ -71,7 +73,8 @@ int main() {
   IP4_ADDR(&netmask, 255, 255, 255, 0);
   IP4_ADDR(&gw, 10, 0, 0, 1);
 
-  IP4_ADDR(&RemoteAddr, 192, 168, 88, 243);  // IP address of PC. Use `hostname -I` to find it.
+  IP4_ADDR(&RemoteAddr, 192, 168, 88,
+           243);  // IP address of PC. Use `hostname -I` to find it.
   // IP4_ADDR(&Remotenetmask, 255, 255, 155,  0);
   // IP4_ADDR(&Remotegw,      10, 0,   0,  1);
 
@@ -79,7 +82,8 @@ int main() {
   lwip_init();
 
   /* Add network interface to the netif_list, and set it as default */
-  if (!xemac_add(echo_netif, &ipaddr, &netmask, &gw, mac_ethernet_address, PLATFORM_EMAC_BASEADDR)) {
+  if (!xemac_add(echo_netif, &ipaddr, &netmask, &gw, mac_ethernet_address,
+                 PLATFORM_EMAC_BASEADDR)) {
     xil_printf("Error adding N/W interface\n\r");
     return -1;
   }
@@ -136,8 +140,10 @@ int main() {
   XGpio xgpio_in[num_xgpio_instances];
 
   for (int i = 0; i < num_xgpio_instances; i++) {
-    XGpio_Initialize(&xgpio_in[i], XPAR_XGPIO_0_BASEADDR + i * 0x10000);  // works in practice
-    XGpio_SetDataDirection(&xgpio_in[i], 1, 1);                           // (instance pointer, channel, direction mask)
+    XGpio_Initialize(&xgpio_in[i],
+                     XPAR_XGPIO_0_BASEADDR + i * 0x10000);  // works in practice
+    XGpio_SetDataDirection(&xgpio_in[i], 1,
+                           1);  // (instance pointer, channel, direction mask)
     if (i != 0) {
       XGpio_SetDataDirection(&xgpio_in[i], 2, 1);  // CH0 is single channel
     }
@@ -186,22 +192,27 @@ int main() {
   int32_t adc_sci_null, adc_sci_mod;                       // science beam
 
   // fpga: processed data
-  int32_t phi_opd_int;                                                                         // opd
-  int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int, shear_i2_int;  // shear
-  int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int, point_i2_int;  // pointing
+  int32_t phi_opd_int;  // opd
+  int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int,
+      shear_i2_int;  // shear
+  int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int,
+      point_i2_int;  // pointing
 
   // intermediate variables
   double x_opd, y_opd, phase_d, prev_phase_d;                         // opd
   double shear_x1, shear_x2, shear_y1, shear_y2, shear_i1, shear_i2;  // shear
-  double shear_x1d, shear_x2d, shear_y1d, shear_y2d;                  // shear corrected
+  double shear_x1d, shear_x2d, shear_y1d, shear_y2d;  // shear corrected
 
-  double point_x1, point_x2, point_y1, point_y2, point_i1, point_i2;  // pointing
-  double point_x1d, point_x2d, point_y1d, point_y2d;                  // pointing corrected
+  double point_x1, point_x2, point_y1, point_y2, point_i1,
+      point_i2;                                       // pointing
+  double point_x1d, point_x2d, point_y1d, point_y2d;  // pointing corrected
 
   // outputs to be sent to PC
-  int32_t phase_rad_int;                                               // opd phase in rad
-  int32_t shear_x1d_int, shear_x2d_int, shear_y1d_int, shear_y2d_int;  // shear corrected
-  int32_t point_x1d_int, point_x2d_int, point_y1d_int, point_y2d_int;  // pointing corrected
+  int32_t phase_rad_int;  // opd phase in rad
+  int32_t shear_x1d_int, shear_x2d_int, shear_y1d_int,
+      shear_y2d_int;  // shear corrected
+  int32_t point_x1d_int, point_x2d_int, point_y1d_int,
+      point_y2d_int;  // pointing corrected
 
   prev_count_opd = 0;
   prev_phase_d = 0.;

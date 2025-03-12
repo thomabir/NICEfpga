@@ -1,11 +1,11 @@
 """Tests for the CORDIC Finite State Machine, which recovers the phase phi and radius r given r*sin(phi) and r*cos(phi)."""
 
 import cocotb
+import matplotlib.pyplot as plt
 import numpy as np
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge
 from cordic_prototype import cartesian_to_phi_cordic, float_to_fixed
-import matplotlib.pyplot as plt
 
 
 @cocotb.test()  # pylint: disable=no-value-for-parameter
@@ -60,7 +60,9 @@ async def cordic_test(dut):
         rs_cordic_sv[i] = dut.r_o.value.signed_integer
 
         # get the output from the Python implementation
-        phis_cordic_python[i], rs_cordic_python[i] = cartesian_to_phi_cordic(x, y, n_iter=24)
+        phis_cordic_python[i], rs_cordic_python[i] = cartesian_to_phi_cordic(
+            x, y, n_iter=24
+        )
 
         # check they are equal
         assert phis_cordic_sv[i] == phis_cordic_python[i]

@@ -35,7 +35,8 @@ void print_app_header()
 */
 
 /* recv_callback: function that handles responding to UDP packets */
-void recv_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, struct ip4_addr *addr, u16_t port) {
+void recv_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p,
+                   struct ip4_addr *addr, u16_t port) {
   // Set up a timeout counter and a status variable
   // int TimeOutCntr = 0;
   // int status = 0;
@@ -50,11 +51,13 @@ void recv_callback(void *arg, struct udp_pcb *upcb, struct pbuf *p, struct ip4_a
   RemotePort = port;
   RemoteAddr = *addr;
 
-  /* Keep track of the control block so we can send data back in the main while loop */
+  /* Keep track of the control block so we can send data back in the main while
+   * loop */
   send_pcb = *upcb;
 
   /********************** WAVE ARRAY ********************************/
-  // Determine the number of bytes received and copy this segment to the temp array
+  // Determine the number of bytes received and copy this segment to the temp
+  // array
   EthBytesReceived = p->len;
   xil_printf("Data len = %d \r\n", p->len);
   // memcpy(&WaveformArr[0], (u32*)p->payload, EthBytesReceived);

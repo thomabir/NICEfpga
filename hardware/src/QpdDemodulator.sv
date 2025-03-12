@@ -1,5 +1,5 @@
 module QpdDemodulator #(
-    parameter int NUM_BITS_IN  = 24,
+    parameter int NUM_BITS_IN = 24,
     parameter int NUM_BITS_OUT = 32
 ) (
     input logic clk_i,
