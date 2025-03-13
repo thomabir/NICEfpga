@@ -63,9 +63,9 @@ repos:
 # C/C++
 -   repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v19.1.7
-    files: \.(c|h|cc|cpp|hpp)$
     hooks:
     -   id: clang-format
+        files: \.(c|h|cc|cpp|hpp)$
 
 # Markdown
 - repo: https://github.com/executablebooks/mdformat
@@ -75,4 +75,4 @@ repos:
     # Optionally add plugins
     additional_dependencies:
     - mdformat-gfm
-    - mdformat-beautysh
+    # - mdformat-beautysh
