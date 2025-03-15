@@ -12,18 +12,27 @@
 #include "platform_config.h"
 #include "xil_printf.h"
 
+template <int NUM_CHANNELS, int NUM_TIMEPOINTS>
 class NetworkInterface {
  private:
+  // Network interface
   struct netif server_netif;
   struct netif* echo_netif;
   struct udp_pcb* pcb;
+  struct pbuf* send_buffer;
+
+  // Network configuration
   struct ip4_addr remote_addr;
   struct ip4_addr ipaddr;
   struct ip4_addr netmask;
   struct ip4_addr gw;
   u16_t remote_port;
-  struct pbuf* send_buffer;
   unsigned char mac_ethernet_address[6];
+
+  // Data
+  static constexpr int payload_size = NUM_CHANNELS * NUM_TIMEPOINTS;
+  int payload_buffer[payload_size];  // Buffer for a full batch
+  int current_timepoint;             // Current position in the batch
 
   void print_ip(char* msg, struct ip4_addr* ip) {
     print(msg);
@@ -98,18 +107,18 @@ class NetworkInterface {
     pcb = NULL;
     remote_port = NetworkConfig::REMOTE_PORT;
     send_buffer = NULL;
+    current_timepoint = 0;
 
     // Initialize IP addresses
     configure_ip_settings();
   }
 
   /**
-   * Initialize the network interface with the given parameters
+   * Initialize the network interface
    *
-   * @param payload_size Size of the payload buffer in bytes
    * @return 0 on success, negative value on failure
    */
-  int init(int payload_size) {
+  int init() {
     // Initialize network interface
     if (init_network_interface() != 0) {
       return -1;
@@ -127,8 +136,9 @@ class NetworkInterface {
       return -2;
     }
 
-    // Allocate packet buffer with the given size
-    send_buffer = pbuf_alloc(PBUF_TRANSPORT, payload_size, PBUF_REF);
+    // Allocate packet buffer with the size of the full batch
+    send_buffer =
+        pbuf_alloc(PBUF_TRANSPORT, payload_size * sizeof(int), PBUF_REF);
     if (send_buffer == NULL) {
       xil_printf("Error allocating packet buffer\n\r");
       return -3;
@@ -138,28 +148,40 @@ class NetworkInterface {
   }
 
   /**
-   * Send data over UDP
+   * Send data over UDP. Data is batched and only sent when the batch is
+   * complete.
    *
-   * @param data Pointer to the data to send
-   * @return 0 on success, negative value on failure
+   * @param data Pointer to a single timepoint of data (NUM_CHANNELS elements)
+   * @return 0 on success, negative value on failure, 1 if data was added to
+   * batch but not sent
    */
-  int send(void* data) {
-    if (send_buffer == NULL) {
-      xil_printf("Error allocating packet buffer\n\r");
-      return -1;
+  int send(int* data) {
+    // Copy the data into the send buffer
+    memcpy(&payload_buffer[current_timepoint * NUM_CHANNELS], data,
+           NUM_CHANNELS * sizeof(int));
+
+    // Increment the timepoint counter
+    current_timepoint++;
+
+    // If batch is complete, send the data
+    if (current_timepoint >= NUM_TIMEPOINTS) {
+      send_buffer->payload = payload_buffer;
+      err_t err = udp_sendto(pcb, send_buffer, &remote_addr, remote_port);
+
+      if (err != ERR_OK) {
+        xil_printf("Error sending UDP packet: %d\n\r", err);
+        return -2;
+      }
+
+      // Process any incoming packets (needed for proper network functioning)
+      xemacif_input(echo_netif);
+
+      // Reset timepoint counter for next batch
+      current_timepoint = 0;
+
+      return 0;  // Data was sent
     }
 
-    send_buffer->payload = data;
-    err_t err = udp_sendto(pcb, send_buffer, &remote_addr, remote_port);
-
-    if (err != ERR_OK) {
-      xil_printf("Error sending UDP packet: %d\n\r", err);
-      return -2;
-    }
-
-    // Process any incoming packets (needed for proper network functioning)
-    xemacif_input(echo_netif);
-
-    return 0;
+    return 1;  // Data was added to batch but not sent yet
   }
 };
