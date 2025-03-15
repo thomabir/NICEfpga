@@ -8,11 +8,11 @@
 #include <stdio.h>
 
 #include "math.h"
+#include "metrology.hpp"
 #include "network_interface.hpp"
 #include "platform.h"
 #include "platform_config.h"
 #include "sleep.h"
-#include "xgpio.h"
 #include "xil_cache.h"
 #include "xil_printf.h"
 #include "xparameters.h"
@@ -33,21 +33,11 @@ int main() {
     return -1;
   }
 
-  // Set up the GPIOs for reading data from the PL
-  xil_printf("Initializing GPIO\n\r");
-  const int num_xgpio_instances = 14;
-  XGpio xgpio_in[num_xgpio_instances];
-
-  // Initialise GPIO 0 (single channel)
-  XGpio_Initialize(&xgpio_in[0], XPAR_XGPIO_0_BASEADDR);
-  XGpio_SetDataDirection(&xgpio_in[0], 1, 1);
-
-  // Initialise other GPIOs (dual channel)
-  for (int i = 1; i < num_xgpio_instances; i++) {
-    u32 gpio_baseaddr = XPAR_XGPIO_0_BASEADDR + i * 0x10000;
-    XGpio_Initialize(&xgpio_in[i], gpio_baseaddr);
-    XGpio_SetDataDirection(&xgpio_in[i], 1, 1);
-    XGpio_SetDataDirection(&xgpio_in[i], 2, 1);  // CH0 is single channel
+  // Initialize metrology system to read data from the FPGA
+  Metrology metrology;
+  if (metrology.init() != 0) {
+    xil_printf("Metrology setup failed\n\r");
+    return -1;
   }
 
   // counters
@@ -66,49 +56,54 @@ int main() {
   int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int,
       point_i2_int;  // pointing
 
+  MetrologyData metrology_data;
+
   prev_count_opd = 0;
 
   xil_printf("Starting loop\n\r");
 
   while (1) {
-    // Get counter from FPGA
-    count_opd = XGpio_DiscreteRead(&xgpio_in[0], 1);
+    // Get counter from metrology
+    count_opd = metrology.read_counter();
 
     // if the counter has incremented, read the values
     if (count_opd == prev_count_opd + 1) {
-      // read the values from the FPGA
-      adc_shear1 = XGpio_DiscreteRead(&xgpio_in[1], 1);
-      adc_shear2 = XGpio_DiscreteRead(&xgpio_in[1], 2);
-      adc_shear3 = XGpio_DiscreteRead(&xgpio_in[2], 1);
-      adc_shear4 = XGpio_DiscreteRead(&xgpio_in[2], 2);
+      // SENSE
+      metrology_data = metrology.read_data();
 
-      adc_point1 = XGpio_DiscreteRead(&xgpio_in[3], 1);
-      adc_point2 = XGpio_DiscreteRead(&xgpio_in[3], 2);
-      adc_point3 = XGpio_DiscreteRead(&xgpio_in[4], 1);
-      adc_point4 = XGpio_DiscreteRead(&xgpio_in[4], 2);
+      // adc_shear1 = metrology_data.arr[0];
+      // adc_shear2 = metrology_data.arr[1];
+      // adc_shear3 = metrology_data.arr[2];
+      // adc_shear4 = metrology_data.arr[3];
 
-      adc_sine_ref = XGpio_DiscreteRead(&xgpio_in[5], 1);
-      adc_opd_ref = XGpio_DiscreteRead(&xgpio_in[5], 2);
+      // adc_point1 = metrology_data.arr[4];
+      // adc_point2 = metrology_data.arr[5];
+      // adc_point3 = metrology_data.arr[6];
+      // adc_point4 = metrology_data.arr[7];
 
-      phi_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 1);
-      // r_opd_int = XGpio_DiscreteRead(&xgpio_in[6], 2);
+      // adc_sine_ref = metrology_data.arr[8];
+      // adc_opd_ref = metrology_data.arr[9];
 
-      shear_x1_int = XGpio_DiscreteRead(&xgpio_in[7], 1);
-      shear_x2_int = XGpio_DiscreteRead(&xgpio_in[7], 2);
-      shear_y1_int = XGpio_DiscreteRead(&xgpio_in[8], 1);
-      shear_y2_int = XGpio_DiscreteRead(&xgpio_in[8], 2);
-      shear_i1_int = XGpio_DiscreteRead(&xgpio_in[9], 1);
-      shear_i2_int = XGpio_DiscreteRead(&xgpio_in[9], 2);
+      // phi_opd_int = metrology_data.arr[10];
 
-      point_x1_int = XGpio_DiscreteRead(&xgpio_in[10], 1);
-      point_x2_int = XGpio_DiscreteRead(&xgpio_in[10], 2);
-      point_y1_int = XGpio_DiscreteRead(&xgpio_in[11], 1);
-      point_y2_int = XGpio_DiscreteRead(&xgpio_in[11], 2);
-      point_i1_int = XGpio_DiscreteRead(&xgpio_in[12], 1);
-      point_i2_int = XGpio_DiscreteRead(&xgpio_in[12], 2);
+      // shear_x1_int = metrology_data.arr[12];
+      // shear_x2_int = metrology_data.arr[13];
+      // shear_y1_int = metrology_data.arr[14];
+      // shear_y2_int = metrology_data.arr[15];
+      // shear_i1_int = metrology_data.arr[16];
+      // shear_i2_int = metrology_data.arr[17];
 
-      adc_sci_null = XGpio_DiscreteRead(&xgpio_in[13], 1);
-      adc_sci_mod = XGpio_DiscreteRead(&xgpio_in[13], 2);
+      // point_x1_int = metrology_data.arr[18];
+      // point_x2_int = metrology_data.arr[19];
+      // point_y1_int = metrology_data.arr[20];
+      // point_y2_int = metrology_data.arr[21];
+      // point_i1_int = metrology_data.arr[22];
+      // point_i2_int = metrology_data.arr[23];
+
+      // adc_sci_null = metrology_data.arr[24];
+      // adc_sci_mod = metrology_data.arr[25];
+
+      // PLAN
 
       // assemble the payload
 
@@ -116,37 +111,39 @@ int main() {
       payload[num_channels * vals_idx] = count_opd;
 
       // adc readings metrology
-      payload[num_channels * vals_idx + 1] = adc_shear1;
-      payload[num_channels * vals_idx + 2] = adc_shear2;
-      payload[num_channels * vals_idx + 3] = adc_shear3;
-      payload[num_channels * vals_idx + 4] = adc_shear4;
+      payload[num_channels * vals_idx + 1] = metrology_data.adc_shear1;
+      payload[num_channels * vals_idx + 2] = metrology_data.adc_shear2;
+      payload[num_channels * vals_idx + 3] = metrology_data.adc_shear3;
+      payload[num_channels * vals_idx + 4] = metrology_data.adc_shear4;
 
-      payload[num_channels * vals_idx + 5] = adc_point1;
-      payload[num_channels * vals_idx + 6] = adc_point2;
-      payload[num_channels * vals_idx + 7] = adc_point3;
-      payload[num_channels * vals_idx + 8] = adc_point4;
+      payload[num_channels * vals_idx + 5] = metrology_data.adc_point1;
+      payload[num_channels * vals_idx + 6] = metrology_data.adc_point2;
+      payload[num_channels * vals_idx + 7] = metrology_data.adc_point3;
+      payload[num_channels * vals_idx + 8] = metrology_data.adc_point4;
 
-      payload[num_channels * vals_idx + 9] = adc_sine_ref;
-      payload[num_channels * vals_idx + 10] = adc_opd_ref;
+      payload[num_channels * vals_idx + 9] = metrology_data.adc_sine_ref;
+      payload[num_channels * vals_idx + 10] = metrology_data.adc_opd_ref;
 
       // opd
-      payload[num_channels * vals_idx + 11] = phi_opd_int;
+      payload[num_channels * vals_idx + 11] = metrology_data.phi_opd_int;
 
       // shear
-      payload[num_channels * vals_idx + 12] = shear_x1_int;
-      payload[num_channels * vals_idx + 13] = shear_x2_int;
-      payload[num_channels * vals_idx + 14] = shear_y1_int;
-      payload[num_channels * vals_idx + 15] = shear_y2_int;
+      payload[num_channels * vals_idx + 12] = metrology_data.shear_x1_int;
+      payload[num_channels * vals_idx + 13] = metrology_data.shear_x2_int;
+      payload[num_channels * vals_idx + 14] = metrology_data.shear_y1_int;
+      payload[num_channels * vals_idx + 15] = metrology_data.shear_y2_int;
 
       // pointing
-      payload[num_channels * vals_idx + 16] = point_x1_int;
-      payload[num_channels * vals_idx + 17] = point_x2_int;
-      payload[num_channels * vals_idx + 18] = point_y1_int;
-      payload[num_channels * vals_idx + 19] = point_y2_int;
+      payload[num_channels * vals_idx + 16] = metrology_data.point_x1_int;
+      payload[num_channels * vals_idx + 17] = metrology_data.point_x2_int;
+      payload[num_channels * vals_idx + 18] = metrology_data.point_y1_int;
+      payload[num_channels * vals_idx + 19] = metrology_data.point_y2_int;
 
       // adc readings science beam
-      payload[num_channels * vals_idx + 20] = adc_sci_null;
-      payload[num_channels * vals_idx + 21] = adc_sci_mod;
+      payload[num_channels * vals_idx + 20] = metrology_data.adc_sci_null;
+      payload[num_channels * vals_idx + 21] = metrology_data.adc_sci_mod;
+
+      // ACT
 
       // if payload is full, send it
       if (vals_idx == num_timepoints - 1) {
