@@ -64,6 +64,7 @@ ProcessedData process_data(const MetrologyData& raw_data, int32_t count) {
 int main() {
   constexpr int num_channels = 22;
   constexpr int num_timepoints = 10;
+  constexpr int num_metrology_xgpios = 13;
 
   // Initialize the network interface
   NetworkInterface<num_channels, num_timepoints> network;
@@ -73,7 +74,7 @@ int main() {
   }
 
   // Initialize metrology system to read data from the FPGA
-  Metrology metrology;
+  Metrology<num_metrology_xgpios> metrology;
   if (metrology.init() != 0) {
     xil_printf("Metrology setup failed\n\r");
     return -1;
