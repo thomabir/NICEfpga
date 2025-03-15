@@ -10,8 +10,15 @@
 #include "netif/xadapter.h"
 #include "network_config.hpp"  // Include the network configuration
 #include "platform_config.h"
+#include "processed_data.hpp"
 #include "xil_printf.h"
 
+/**
+ * @brief Network interface for sending data over UDP with batching
+ *
+ * @tparam NUM_CHANNELS Number of channels per timepoint
+ * @tparam NUM_TIMEPOINTS Number of timepoints to batch before sending
+ */
 template <int NUM_CHANNELS, int NUM_TIMEPOINTS>
 class NetworkInterface {
  private:
@@ -28,11 +35,12 @@ class NetworkInterface {
   u16_t remote_port;
   unsigned char mac_ethernet_address[6];
 
-  // Data
+  // Data batching
   static constexpr int payload_size = NUM_CHANNELS * NUM_TIMEPOINTS;
-  int payload_buffer[payload_size];  // Buffer for a full batch
-  int current_timepoint;             // Current position in the batch
+  int batch_buffer[payload_size];  // Buffer for data accumulation
+  int current_timepoint = 0;       // Current position in the batch
 
+  // Print utility functions
   void print_ip(char* msg, struct ip4_addr* ip) {
     print(msg);
     xil_printf("%d.%d.%d.%d\n\r", ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip),
@@ -46,14 +54,7 @@ class NetworkInterface {
     print_ip("Gateway : ", gw);
   }
 
-  void configure_ip_settings() {
-    /* Copy pre-configured IP addresses */
-    ipaddr = NetworkConfig::FPGA_IP_ADDR;
-    netmask = NetworkConfig::FPGA_NETMASK;
-    gw = NetworkConfig::FPGA_GATEWAY;
-    remote_addr = NetworkConfig::REMOTE_IP_ADDR;
-  }
-
+  // Setup helper functions
   int init_network_interface() {
     /* Initialize the lwip for UDP */
     lwip_init();
@@ -97,18 +98,35 @@ class NetworkInterface {
     return 0;
   }
 
+  /**
+   * Sends the current batch over the network
+   *
+   * @return 0 on success, negative value on failure
+   */
+  int send_batch() {
+    send_buffer->payload = batch_buffer;
+    err_t err = udp_sendto(pcb, send_buffer, &remote_addr, remote_port);
+
+    if (err != ERR_OK) {
+      xil_printf("Error sending UDP packet: %d\n\r", err);
+      return -1;
+    }
+
+    // Process any incoming packets (needed for proper network functioning)
+    xemacif_input(&netif);
+
+    return 0;
+  }
+
  public:
   NetworkInterface() {
-    // Set default MAC address from configuration
+    // Load network configuration from the configuration file
     memcpy(mac_ethernet_address, NetworkConfig::MAC_ADDRESS, 6);
-
-    pcb = NULL;
+    ipaddr = NetworkConfig::FPGA_IP_ADDR;
+    netmask = NetworkConfig::FPGA_NETMASK;
+    gw = NetworkConfig::FPGA_GATEWAY;
+    remote_addr = NetworkConfig::REMOTE_IP_ADDR;
     remote_port = NetworkConfig::REMOTE_PORT;
-    send_buffer = NULL;
-    current_timepoint = 0;
-
-    // Initialize IP addresses
-    configure_ip_settings();
   }
 
   /**
@@ -146,16 +164,16 @@ class NetworkInterface {
   }
 
   /**
-   * Send data over UDP. Data is batched and only sent when the batch is
-   * complete.
+   * Add data to the batch. When the batch is complete, it will be sent
+   * automatically.
    *
    * @param data Pointer to a single timepoint of data (NUM_CHANNELS elements)
-   * @return 0 on success, negative value on failure, 1 if data was added to
-   * batch but not sent
+   * @return 0 if batch was sent, 1 if data was added but batch not complete,
+   * negative on error
    */
-  int send(int* data) {
-    // Copy the data into the send buffer
-    memcpy(&payload_buffer[current_timepoint * NUM_CHANNELS], data,
+  int send(const ProcessedData& data) {
+    // Copy the data into the batch buffer
+    memcpy(&batch_buffer[current_timepoint * NUM_CHANNELS], data.arr.data(),
            NUM_CHANNELS * sizeof(int));
 
     // Increment the timepoint counter
@@ -163,21 +181,12 @@ class NetworkInterface {
 
     // If batch is complete, send the data
     if (current_timepoint >= NUM_TIMEPOINTS) {
-      send_buffer->payload = payload_buffer;
-      err_t err = udp_sendto(pcb, send_buffer, &remote_addr, remote_port);
-
-      if (err != ERR_OK) {
-        xil_printf("Error sending UDP packet: %d\n\r", err);
-        return -2;
-      }
-
-      // Process any incoming packets (needed for proper network functioning)
-      xemacif_input(&netif);
+      int result = send_batch();
 
       // Reset timepoint counter for next batch
       current_timepoint = 0;
 
-      return 0;  // Data was sent
+      return result;  // 0 if sent successfully, negative on error
     }
 
     return 1;  // Data was added to batch but not sent yet

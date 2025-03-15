@@ -12,16 +12,63 @@
 #include "network_interface.hpp"
 #include "platform.h"
 #include "platform_config.h"
+#include "processed_data.hpp"
 #include "sleep.h"
 #include "xil_cache.h"
 #include "xil_printf.h"
 #include "xparameters.h"
 
+/**
+ * Process the raw metrology data
+ *
+ * @param raw_data Raw data from the metrology system
+ * @param count Current counter value
+ * @return Processed data
+ */
+ProcessedData process_data(const MetrologyData& raw_data, int32_t count) {
+  ProcessedData data;
+
+  // Counter
+  data.counter = count;
+
+  // ADC readings
+  data.adc_shear1 = raw_data.adc_shear1;
+  data.adc_shear2 = raw_data.adc_shear2;
+  data.adc_shear3 = raw_data.adc_shear3;
+  data.adc_shear4 = raw_data.adc_shear4;
+  data.adc_point1 = raw_data.adc_point1;
+  data.adc_point2 = raw_data.adc_point2;
+  data.adc_point3 = raw_data.adc_point3;
+  data.adc_point4 = raw_data.adc_point4;
+  data.adc_sine_ref = raw_data.adc_sine_ref;
+  data.adc_opd_ref = raw_data.adc_opd_ref;
+
+  // OPD
+  // TODO: Unwrap the phase
+  data.phi_opd = raw_data.phi_opd_int;
+
+  // Shear
+  data.shear_x1 = raw_data.shear_x1_int;
+  data.shear_x2 = raw_data.shear_x2_int;
+  data.shear_y1 = raw_data.shear_y1_int;
+  data.shear_y2 = raw_data.shear_y2_int;
+
+  // Pointing
+  data.point_x1 = raw_data.point_x1_int;
+  data.point_x2 = raw_data.point_x2_int;
+  data.point_y1 = raw_data.point_y1_int;
+  data.point_y2 = raw_data.point_y2_int;
+
+  // Science beam
+  data.adc_sci_null = raw_data.adc_sci_null;
+  data.adc_sci_mod = raw_data.adc_sci_mod;
+
+  return data;
+}
+
 int main() {
-  xil_printf("Initializing payload containers\n\r");
   constexpr int num_channels = 22;
   constexpr int num_timepoints = 10;
-  int single_payload[num_channels];
 
   // Initialize the network interface
   NetworkInterface<num_channels, num_timepoints> network;
@@ -39,6 +86,7 @@ int main() {
 
   int32_t count, prev_count;  // keep track whether new data is available
   MetrologyData metrology_data;
+  ProcessedData processed_data;
 
   prev_count = 0;
 
@@ -48,7 +96,7 @@ int main() {
     // Get counter from metrology
     count = metrology.read_counter();
 
-    // if the counter has incremented, new data is available
+    // If the counter has incremented, new data is available
     if (count == prev_count + 1) {
       // Pattern: Sense - Plan - Act
 
@@ -56,49 +104,12 @@ int main() {
       metrology_data = metrology.read_data();
 
       // PLAN
-      // assemble the payload for a single timepoint
-
-      // counter
-      single_payload[0] = count;
-
-      // adc readings metrology
-      single_payload[1] = metrology_data.adc_shear1;
-      single_payload[2] = metrology_data.adc_shear2;
-      single_payload[3] = metrology_data.adc_shear3;
-      single_payload[4] = metrology_data.adc_shear4;
-
-      single_payload[5] = metrology_data.adc_point1;
-      single_payload[6] = metrology_data.adc_point2;
-      single_payload[7] = metrology_data.adc_point3;
-      single_payload[8] = metrology_data.adc_point4;
-
-      single_payload[9] = metrology_data.adc_sine_ref;
-      single_payload[10] = metrology_data.adc_opd_ref;
-
-      // opd
-      single_payload[11] = metrology_data.phi_opd_int;
-
-      // shear
-      single_payload[12] = metrology_data.shear_x1_int;
-      single_payload[13] = metrology_data.shear_x2_int;
-      single_payload[14] = metrology_data.shear_y1_int;
-      single_payload[15] = metrology_data.shear_y2_int;
-
-      // pointing
-      single_payload[16] = metrology_data.point_x1_int;
-      single_payload[17] = metrology_data.point_x2_int;
-      single_payload[18] = metrology_data.point_y1_int;
-      single_payload[19] = metrology_data.point_y2_int;
-
-      // adc readings science beam
-      single_payload[20] = metrology_data.adc_sci_null;
-      single_payload[21] = metrology_data.adc_sci_mod;
+      processed_data = process_data(metrology_data, count);
 
       // ACT
-      network.send(single_payload);
+      network.send(processed_data);
     }
 
-    // set the previous counter to the current counter
     prev_count = count;
   }
 
