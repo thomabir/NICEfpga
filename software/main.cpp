@@ -40,75 +40,30 @@ int main() {
     return -1;
   }
 
-  // counters
-  int32_t count_opd, prev_count_opd;
-
-  // fpga: adc measurements
-  int32_t adc_shear1, adc_shear2, adc_shear3, adc_shear4;  // shear
-  int32_t adc_point1, adc_point2, adc_point3, adc_point4;  // pointing
-  int32_t adc_sine_ref, adc_opd_ref;                       // references
-  int32_t adc_sci_null, adc_sci_mod;                       // science beam
-
-  // fpga: processed data
-  int32_t phi_opd_int;  // opd
-  int32_t shear_x1_int, shear_x2_int, shear_y1_int, shear_y2_int, shear_i1_int,
-      shear_i2_int;  // shear
-  int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int,
-      point_i2_int;  // pointing
-
+  int32_t count, prev_count;  // keep track whether new data is available
   MetrologyData metrology_data;
 
-  prev_count_opd = 0;
+  prev_count = 0;
 
   xil_printf("Starting loop\n\r");
 
   while (1) {
     // Get counter from metrology
-    count_opd = metrology.read_counter();
+    count = metrology.read_counter();
 
-    // if the counter has incremented, read the values
-    if (count_opd == prev_count_opd + 1) {
+    // if the counter has incremented, new data is available
+    if (count == prev_count + 1) {
+      // Pattern: Sense - Plan - Act
+
       // SENSE
       metrology_data = metrology.read_data();
-
-      // adc_shear1 = metrology_data.arr[0];
-      // adc_shear2 = metrology_data.arr[1];
-      // adc_shear3 = metrology_data.arr[2];
-      // adc_shear4 = metrology_data.arr[3];
-
-      // adc_point1 = metrology_data.arr[4];
-      // adc_point2 = metrology_data.arr[5];
-      // adc_point3 = metrology_data.arr[6];
-      // adc_point4 = metrology_data.arr[7];
-
-      // adc_sine_ref = metrology_data.arr[8];
-      // adc_opd_ref = metrology_data.arr[9];
-
-      // phi_opd_int = metrology_data.arr[10];
-
-      // shear_x1_int = metrology_data.arr[12];
-      // shear_x2_int = metrology_data.arr[13];
-      // shear_y1_int = metrology_data.arr[14];
-      // shear_y2_int = metrology_data.arr[15];
-      // shear_i1_int = metrology_data.arr[16];
-      // shear_i2_int = metrology_data.arr[17];
-
-      // point_x1_int = metrology_data.arr[18];
-      // point_x2_int = metrology_data.arr[19];
-      // point_y1_int = metrology_data.arr[20];
-      // point_y2_int = metrology_data.arr[21];
-      // point_i1_int = metrology_data.arr[22];
-      // point_i2_int = metrology_data.arr[23];
-
-      // adc_sci_null = metrology_data.arr[24];
-      // adc_sci_mod = metrology_data.arr[25];
 
       // PLAN
 
       // assemble the payload
 
       // counter
-      payload[num_channels * vals_idx] = count_opd;
+      payload[num_channels * vals_idx] = count;
 
       // adc readings metrology
       payload[num_channels * vals_idx + 1] = metrology_data.adc_shear1;
@@ -161,7 +116,7 @@ int main() {
     }
 
     // set the previous counter to the current counter
-    prev_count_opd = count_opd;
+    prev_count = count;
   }
 
   cleanup_platform();
