@@ -18,11 +18,7 @@
 #include "xparameters.h"
 
 int main() {
-  // Initialize the network interface
-  NetworkInterface network;
-
   xil_printf("Initializing payload containers\n\r");
-  // max payload size: 1500 bytes = 12000 bits = 375 int (32 bits each)
   const int num_channels = 22;
   const int num_timepoints = 10;
   int payload_size = num_channels * num_timepoints;
@@ -30,25 +26,28 @@ int main() {
   int pkg_no = 0;
   int vals_idx = 0;
 
-  // Initialize network with package size only
+  // Initialize the network interface and set the payload size
+  NetworkInterface network;
   if (network.init(payload_size * sizeof(int)) != 0) {
     xil_printf("Network setup failed\n\r");
     return -1;
   }
 
-  // activate the GPIOs, two channels each, data direction: read
+  // Set up the GPIOs for reading data from the PL
   xil_printf("Initializing GPIO\n\r");
   const int num_xgpio_instances = 14;
   XGpio xgpio_in[num_xgpio_instances];
 
-  for (int i = 0; i < num_xgpio_instances; i++) {
-    XGpio_Initialize(&xgpio_in[i],
-                     XPAR_XGPIO_0_BASEADDR + i * 0x10000);  // works in practice
-    XGpio_SetDataDirection(&xgpio_in[i], 1,
-                           1);  // (instance pointer, channel, direction mask)
-    if (i != 0) {
-      XGpio_SetDataDirection(&xgpio_in[i], 2, 1);  // CH0 is single channel
-    }
+  // Initialise GPIO 0 (single channel)
+  XGpio_Initialize(&xgpio_in[0], XPAR_XGPIO_0_BASEADDR);
+  XGpio_SetDataDirection(&xgpio_in[0], 1, 1);
+
+  // Initialise other GPIOs (dual channel)
+  for (int i = 1; i < num_xgpio_instances; i++) {
+    u32 gpio_baseaddr = XPAR_XGPIO_0_BASEADDR + i * 0x10000;
+    XGpio_Initialize(&xgpio_in[i], gpio_baseaddr);
+    XGpio_SetDataDirection(&xgpio_in[i], 1, 1);
+    XGpio_SetDataDirection(&xgpio_in[i], 2, 1);  // CH0 is single channel
   }
 
   // counters
@@ -66,20 +65,6 @@ int main() {
       shear_i2_int;  // shear
   int32_t point_x1_int, point_x2_int, point_y1_int, point_y2_int, point_i1_int,
       point_i2_int;  // pointing
-
-  // intermediate variables
-  double shear_x1, shear_x2, shear_y1, shear_y2, shear_i1, shear_i2;  // shear
-  double shear_x1d, shear_x2d, shear_y1d, shear_y2d;  // shear corrected
-
-  double point_x1, point_x2, point_y1, point_y2, point_i1,
-      point_i2;                                       // pointing
-  double point_x1d, point_x2d, point_y1d, point_y2d;  // pointing corrected
-
-  // outputs to be sent to PC
-  int32_t shear_x1d_int, shear_x2d_int, shear_y1d_int,
-      shear_y2d_int;  // shear corrected
-  int32_t point_x1d_int, point_x2d_int, point_y1d_int,
-      point_y2d_int;  // pointing corrected
 
   prev_count_opd = 0;
 
@@ -125,42 +110,6 @@ int main() {
       adc_sci_null = XGpio_DiscreteRead(&xgpio_in[13], 1);
       adc_sci_mod = XGpio_DiscreteRead(&xgpio_in[13], 2);
 
-      shear_x1 = (double)shear_x1_int;  // x1
-      shear_x2 = (double)shear_x2_int;  // x2
-      shear_y1 = (double)shear_y1_int;  // y1
-      shear_y2 = (double)shear_y2_int;  // y2
-      shear_i1 = (double)shear_i1_int;  // i1
-      shear_i2 = (double)shear_i2_int;  // i2
-
-      point_x1 = (double)point_x1_int;  // x1
-      point_x2 = (double)point_x2_int;  // x2
-      point_y1 = (double)point_y1_int;  // y1
-      point_y2 = (double)point_y2_int;  // y2
-      point_i1 = (double)point_i1_int;  // i1
-      point_i2 = (double)point_i2_int;  // i2
-
-      // Shear
-      shear_x1d = shear_x1 / shear_i1 * 1.11e3;  // um
-      shear_x2d = shear_x2 / shear_i2 * 1.11e3;  // um
-      shear_y1d = shear_y1 / shear_i1 * 1.11e3;  // um
-      shear_y2d = shear_y2 / shear_i2 * 1.11e3;  // um
-
-      shear_x1d_int = (int32_t)(shear_x1d * 1000);  // nm
-      shear_x2d_int = (int32_t)(shear_x2d * 1000);  // nm
-      shear_y1d_int = (int32_t)(shear_y1d * 1000);  // nm
-      shear_y2d_int = (int32_t)(shear_y2d * 1000);  // nm
-
-      // Pointing
-      point_x1d = point_x1 / point_i1 * 1.11e3;  // um
-      point_x2d = point_x2 / point_i2 * 1.11e3;  // um
-      point_y1d = point_y1 / point_i1 * 1.11e3;  // um
-      point_y2d = point_y2 / point_i2 * 1.11e3;  // um
-
-      point_x1d_int = (int32_t)(point_x1d * 1000);  // nm
-      point_x2d_int = (int32_t)(point_x2d * 1000);  // nm
-      point_y1d_int = (int32_t)(point_y1d * 1000);  // nm
-      point_y2d_int = (int32_t)(point_y2d * 1000);  // nm
-
       // assemble the payload
 
       // counter
@@ -184,16 +133,16 @@ int main() {
       payload[num_channels * vals_idx + 11] = phi_opd_int;
 
       // shear
-      payload[num_channels * vals_idx + 12] = shear_x1d_int;
-      payload[num_channels * vals_idx + 13] = shear_x2d_int;
-      payload[num_channels * vals_idx + 14] = shear_y1d_int;
-      payload[num_channels * vals_idx + 15] = shear_y2d_int;
+      payload[num_channels * vals_idx + 12] = shear_x1_int;
+      payload[num_channels * vals_idx + 13] = shear_x2_int;
+      payload[num_channels * vals_idx + 14] = shear_y1_int;
+      payload[num_channels * vals_idx + 15] = shear_y2_int;
 
       // pointing
-      payload[num_channels * vals_idx + 16] = point_x1d_int;
-      payload[num_channels * vals_idx + 17] = point_x2d_int;
-      payload[num_channels * vals_idx + 18] = point_y1d_int;
-      payload[num_channels * vals_idx + 19] = point_y2d_int;
+      payload[num_channels * vals_idx + 16] = point_x1_int;
+      payload[num_channels * vals_idx + 17] = point_x2_int;
+      payload[num_channels * vals_idx + 18] = point_y1_int;
+      payload[num_channels * vals_idx + 19] = point_y2_int;
 
       // adc readings science beam
       payload[num_channels * vals_idx + 20] = adc_sci_null;
