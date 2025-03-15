@@ -5,18 +5,13 @@
 // #undef LWIP_CHECKSUM_ON_COPY
 // #undef CHECKSUM_GEN_UDP
 
+#include <stdint.h>
 #include <stdio.h>
 
-#include "math.h"
 #include "metrology.hpp"
 #include "network_interface.hpp"
-#include "platform.h"
-#include "platform_config.h"
 #include "processed_data.hpp"
-#include "sleep.h"
-#include "xil_cache.h"
 #include "xil_printf.h"
-#include "xparameters.h"
 
 /**
  * Process the raw metrology data
@@ -113,6 +108,5 @@ int main() {
     prev_count = count;
   }
 
-  cleanup_platform();
   return 0;
 }
