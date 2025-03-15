@@ -16,10 +16,9 @@ template <int NUM_CHANNELS, int NUM_TIMEPOINTS>
 class NetworkInterface {
  private:
   // Network interface
-  struct netif server_netif;
-  struct netif* echo_netif;
-  struct udp_pcb* pcb;
-  struct pbuf* send_buffer;
+  struct netif netif;        // Network interface structure
+  struct udp_pcb* pcb;       // UDP protocol control block
+  struct pbuf* send_buffer;  // Buffer for sending data
 
   // Network configuration
   struct ip4_addr remote_addr;
@@ -60,16 +59,16 @@ class NetworkInterface {
     lwip_init();
 
     /* Add network interface to the netif_list, and set it as default */
-    if (!xemac_add(echo_netif, &ipaddr, &netmask, &gw, mac_ethernet_address,
+    if (!xemac_add(&netif, &ipaddr, &netmask, &gw, mac_ethernet_address,
                    PLATFORM_EMAC_BASEADDR)) {
       xil_printf("Error adding N/W interface\n\r");
       return -1;
     }
 
-    netif_set_default(echo_netif);
+    netif_set_default(&netif);
 
     /* specify that the network if is up */
-    netif_set_up(echo_netif);
+    netif_set_up(&netif);
 
     return 0;
   }
@@ -103,7 +102,6 @@ class NetworkInterface {
     // Set default MAC address from configuration
     memcpy(mac_ethernet_address, NetworkConfig::MAC_ADDRESS, 6);
 
-    echo_netif = &server_netif;
     pcb = NULL;
     remote_port = NetworkConfig::REMOTE_PORT;
     send_buffer = NULL;
@@ -174,7 +172,7 @@ class NetworkInterface {
       }
 
       // Process any incoming packets (needed for proper network functioning)
-      xemacif_input(echo_netif);
+      xemacif_input(&netif);
 
       // Reset timepoint counter for next batch
       current_timepoint = 0;
