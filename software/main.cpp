@@ -17,8 +17,6 @@
 #include "xil_printf.h"
 #include "xparameters.h"
 
-#define PI 3.14159265359
-
 int main() {
   // Initialize the network interface
   NetworkInterface network;
