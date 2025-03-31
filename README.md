@@ -1,1 +1,1 @@
-This repo has moved to the [ETHZ Gitlab](gitlab.ethz.ch/nice/metrology).
+This repo has moved to the [ETHZ Gitlab](https://gitlab.ethz.ch/nice/metrology).
